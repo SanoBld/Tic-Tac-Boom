@@ -3,214 +3,1411 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>💣 Tic Tac Boom - Jeu Multijoueur</title>
+    <title>💣 Tic Tac Boom - Jeu de Mots</title>
     
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Outfit:wght@700;800;900&display=swap" rel="stylesheet">
-
     <style>
+/* ===== VARIABLES ===== */
 :root {
-    --bg: #0a0c14;
-    --bg-elevated: #121420;
-    --bg-card: #181b28;
-    --primary: #00c9ff;
-    --primary-dark: #0099cc;
-    --secondary: #92fe9d;
-    --accent: #ff3d71;
-    --text: #e8ecf5;
-    --text-dim: #8a92a6;
-    --border: rgba(255, 255, 255, 0.06);
-    --shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    --bg-primary: #0f172a;
+    --bg-secondary: #1e293b;
+    --bg-tertiary: #334155;
+    --bg-overlay: rgba(15, 23, 42, 0.95);
+    
+    --text-primary: #f1f5f9;
+    --text-secondary: #cbd5e1;
+    --text-tertiary: #94a3b8;
+    
+    --accent-primary: #3b82f6;
+    --accent-secondary: #8b5cf6;
+    --accent-success: #10b981;
+    --accent-warning: #f59e0b;
+    --accent-danger: #ef4444;
+    
+    --border-color: #334155;
+    --border-radius: 12px;
+    
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
+    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
+    
+    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+[data-theme="light"] {
+    --bg-primary: #f8fafc;
+    --bg-secondary: #ffffff;
+    --bg-tertiary: #e2e8f0;
+    --bg-overlay: rgba(248, 250, 252, 0.95);
+    
+    --text-primary: #0f172a;
+    --text-secondary: #334155;
+    --text-tertiary: #64748b;
+    
+    --border-color: #e2e8f0;
+    
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.1);
+    --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.12);
+    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.15);
+}
+
+/* ===== RESET ===== */
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
 
+html {
+    font-size: 16px;
+}
+
 body {
-    font-family: 'Poppins', sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    min-height: 100vh;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    line-height: 1.6;
     overflow-x: hidden;
+    min-height: 100vh;
+    transition: background 0.3s, color 0.3s;
 }
 
-body::before {
-    content: '';
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: 
-        radial-gradient(circle at 20% 30%, rgba(0, 201, 255, 0.03), transparent 50%),
-        radial-gradient(circle at 80% 70%, rgba(146, 254, 157, 0.03), transparent 50%);
-    pointer-events: none;
-    z-index: 0;
-}
-
-.container {
-    position: relative;
-    z-index: 1;
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 20px;
-}
-
-h1, h2, h3 {
-    font-family: 'Outfit', sans-serif;
-}
-
-.btn {
-    padding: 12px 28px;
-    font-size: 15px;
-    font-weight: 600;
-    border: none;
-    border-radius: 10px;
-    cursor: pointer;
-    transition: all 0.2s;
-    font-family: inherit;
-}
-
-.btn-primary {
-    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-    color: white;
-    box-shadow: 0 4px 15px rgba(0, 201, 255, 0.3);
-}
-
-.btn-primary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(0, 201, 255, 0.4);
-}
-
-.btn-secondary {
-    background: var(--bg-card);
-    color: var(--text);
-    border: 1px solid var(--border);
-}
-
-.btn-secondary:hover {
-    border-color: var(--primary);
-}
-
-.btn-danger {
-    background: var(--accent);
-    color: white;
-}
-
-.input {
-    width: 100%;
-    padding: 14px 18px;
-    font-size: 15px;
-    background: var(--bg-card);
-    border: 2px solid var(--border);
-    border-radius: 10px;
-    color: var(--text);
-    font-family: inherit;
-    transition: all 0.2s;
-}
-
-.input:focus {
-    outline: none;
-    border-color: var(--primary);
-    box-shadow: 0 0 0 3px rgba(0, 201, 255, 0.1);
-}
-
-.card {
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 24px;
-    box-shadow: var(--shadow);
+/* ===== UTILITY CLASSES ===== */
+.hidden {
+    display: none !important;
 }
 
 .screen {
     display: none;
     min-height: 100vh;
+    padding: 1rem;
 }
 
 .screen.active {
-    display: block;
+    display: flex;
+    flex-direction: column;
 }
 
-/* Home */
-#home {
-    display: flex;
+.container {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 1rem;
+}
+
+.card {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    padding: 1.5rem;
+    box-shadow: var(--shadow-sm);
+}
+
+.btn {
+    display: inline-flex;
     align-items: center;
     justify-content: center;
-    text-align: center;
-    padding: 40px 20px;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+    font-weight: 600;
+    border: none;
+    border-radius: var(--border-radius);
+    background: var(--accent-primary);
+    color: white;
+    cursor: pointer;
+    transition: var(--transition);
+    text-decoration: none;
+    font-family: inherit;
+    white-space: nowrap;
+}
+
+.btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+    filter: brightness(1.1);
+}
+
+.btn:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+.btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.btn-secondary {
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+}
+
+.btn-success {
+    background: var(--accent-success);
+}
+
+.btn-danger {
+    background: var(--accent-danger);
+}
+
+.input {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+    background: var(--bg-tertiary);
+    border: 2px solid var(--border-color);
+    border-radius: var(--border-radius);
+    color: var(--text-primary);
+    font-family: inherit;
+    transition: var(--transition);
+}
+
+.input:focus {
+    outline: none;
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.input::placeholder {
+    color: var(--text-tertiary);
+}
+
+/* ===== HOME SCREEN ===== */
+#home {
+    align-items: center;
+    justify-content: center;
 }
 
 .home-content {
+    text-align: center;
     max-width: 600px;
+    width: 100%;
+}
+
+.logo {
+    font-size: 5rem;
+    margin-bottom: 1rem;
+    animation: bounce 2s infinite;
+}
+
+@keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-20px); }
 }
 
 .title {
-    font-size: 64px;
-    margin-bottom: 16px;
-    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    font-size: 2.5rem;
+    font-weight: 800;
+    margin-bottom: 0.5rem;
+    background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
     -webkit-background-clip: text;
+    background-clip: text;
     -webkit-text-fill-color: transparent;
-    animation: float 3s ease-in-out infinite;
-}
-
-@keyframes float {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-10px); }
 }
 
 .subtitle {
-    font-size: 20px;
-    color: var(--text-dim);
-    margin-bottom: 40px;
+    font-size: 1.125rem;
+    color: var(--text-secondary);
+    margin-bottom: 2rem;
 }
 
-.actions {
+.username-section {
+    margin-bottom: 2rem;
+}
+
+.username-label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: var(--text-secondary);
+}
+
+.username-input-group {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.emoji-select {
+    flex-shrink: 0;
+    font-size: 2rem;
+    cursor: pointer;
+    padding: 0.5rem;
+    background: var(--bg-secondary);
+    border: 2px solid var(--border-color);
+    border-radius: var(--border-radius);
+    transition: var(--transition);
+}
+
+.emoji-select:hover {
+    border-color: var(--accent-primary);
+}
+
+.color-select {
+    flex-shrink: 0;
+    width: 50px;
+    height: 50px;
+    border: 2px solid var(--border-color);
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.color-select:hover {
+    border-color: var(--accent-primary);
+}
+
+.actions-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 16px;
-    margin-bottom: 32px;
+    gap: 1rem;
+    margin-bottom: 1rem;
 }
 
-.username-box {
-    background: var(--bg-elevated);
-    padding: 24px;
-    border-radius: 16px;
-    margin-bottom: 32px;
+.action-card {
+    background: var(--bg-secondary);
+    border: 2px solid var(--border-color);
+    border-radius: var(--border-radius);
+    padding: 1.5rem;
+    cursor: pointer;
+    transition: var(--transition);
+    text-align: center;
 }
 
-.status {
-    display: inline-flex;
+.action-card:hover {
+    border-color: var(--accent-primary);
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-md);
+}
+
+.action-card-icon {
+    font-size: 3rem;
+    margin-bottom: 0.5rem;
+}
+
+.action-card-title {
+    font-size: 1.125rem;
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+}
+
+.action-card-desc {
+    font-size: 0.875rem;
+    color: var(--text-tertiary);
+}
+
+.theme-toggle {
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
+    z-index: 1000;
+}
+
+.theme-btn {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: var(--bg-secondary);
+    border: 2px solid var(--border-color);
+    cursor: pointer;
+    font-size: 1.5rem;
+    display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 8px 16px;
-    border-radius: 20px;
-    font-size: 14px;
-    margin-top: 16px;
+    justify-content: center;
+    transition: var(--transition);
 }
 
-.status.loading {
-    background: rgba(251, 191, 36, 0.1);
-    color: #fbbf24;
+.theme-btn:hover {
+    border-color: var(--accent-primary);
+    transform: rotate(180deg);
 }
 
-.status.ready {
-    background: rgba(146, 254, 157, 0.1);
-    color: var(--secondary);
+/* ===== MODAL ===== */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--bg-overlay);
+    z-index: 2000;
+    backdrop-filter: blur(8px);
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    animation: fadeIn 0.3s;
 }
 
-.spinner {
-    width: 14px;
-    height: 14px;
-    border: 2px solid currentColor;
-    border-top-color: transparent;
+.modal.active {
+    display: flex;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.modal-content {
+    background: var(--bg-secondary);
+    border-radius: var(--border-radius);
+    padding: 2rem;
+    max-width: 600px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: var(--shadow-lg);
+    animation: slideUp 0.3s;
+}
+
+@keyframes slideUp {
+    from { transform: translateY(50px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.modal-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.modal-close {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--bg-tertiary);
+    border: none;
+    cursor: pointer;
+    font-size: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition);
+}
+
+.modal-close:hover {
+    background: var(--accent-danger);
+    color: white;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: var(--text-secondary);
+}
+
+.form-description {
+    font-size: 0.875rem;
+    color: var(--text-tertiary);
+    margin-top: 0.25rem;
+}
+
+.range-group {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.range {
+    flex: 1;
+    height: 6px;
+    border-radius: 3px;
+    background: var(--bg-tertiary);
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+.range::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--accent-primary);
+    cursor: pointer;
+}
+
+.range::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--accent-primary);
+    cursor: pointer;
+    border: none;
+}
+
+.range-value {
+    min-width: 60px;
+    padding: 0.5rem 1rem;
+    background: var(--accent-primary);
+    color: white;
+    border-radius: var(--border-radius);
+    font-weight: 700;
+    text-align: center;
+}
+
+.radio-group {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.radio-option {
+    flex: 1;
+    min-width: 100px;
+}
+
+.radio-option input {
+    display: none;
+}
+
+.radio-option label {
+    display: block;
+    padding: 0.75rem 1rem;
+    background: var(--bg-tertiary);
+    border: 2px solid var(--border-color);
+    border-radius: var(--border-radius);
+    text-align: center;
+    cursor: pointer;
+    transition: var(--transition);
+    font-weight: 600;
+}
+
+.radio-option input:checked + label {
+    background: var(--accent-primary);
+    border-color: var(--accent-primary);
+    color: white;
+}
+
+.checkbox-option {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem;
+    background: var(--bg-tertiary);
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.checkbox-option:hover {
+    background: var(--bg-secondary);
+}
+
+.checkbox-option input {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+}
+
+/* ===== LOBBY ===== */
+#lobby {
+    align-items: center;
+    justify-content: center;
+}
+
+.lobby-container {
+    max-width: 800px;
+    width: 100%;
+}
+
+.lobby-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.lobby-code-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    padding: 2rem;
+    background: var(--bg-secondary);
+    border-radius: var(--border-radius);
+    margin-bottom: 2rem;
+}
+
+.lobby-code-label {
+    font-size: 0.875rem;
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.lobby-code {
+    font-size: 3rem;
+    font-weight: 800;
+    letter-spacing: 0.5rem;
+    color: var(--accent-primary);
+    font-family: 'Courier New', monospace;
+}
+
+.copy-code-btn {
+    font-size: 0.875rem;
+    padding: 0.5rem 1rem;
+}
+
+.players-section {
+    margin-bottom: 2rem;
+}
+
+.players-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.players-count {
+    color: var(--text-tertiary);
+}
+
+.players-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1rem;
+}
+
+.player-card {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: var(--bg-secondary);
+    border: 2px solid var(--border-color);
+    border-radius: var(--border-radius);
+    transition: var(--transition);
+}
+
+.player-card.me {
+    border-color: var(--accent-primary);
+}
+
+.player-avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    flex-shrink: 0;
+}
+
+.player-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.player-name {
+    font-weight: 700;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.player-badge {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    background: var(--accent-primary);
+    color: white;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    margin-top: 0.25rem;
+}
+
+.lobby-actions {
+    display: flex;
+    gap: 1rem;
+}
+
+.lobby-actions .btn {
+    flex: 1;
+}
+
+.connection-status {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: var(--bg-tertiary);
+    border-radius: var(--border-radius);
+    font-size: 0.875rem;
+    margin-bottom: 1rem;
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--accent-success);
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+.ping-display {
+    font-size: 0.75rem;
+    color: var(--text-tertiary);
+    margin-left: auto;
+}
+
+/* ===== GAME SCREEN ===== */
+#game {
+    justify-content: center;
+    padding: 0;
+}
+
+.game-container {
+    width: 100%;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+
+.game-header {
+    padding: 1rem;
+    background: var(--bg-secondary);
+    border-bottom: 2px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.game-info {
+    display: flex;
+    gap: 2rem;
+    align-items: center;
+}
+
+.game-stat {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.game-stat-label {
+    font-size: 0.75rem;
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+}
+
+.game-stat-value {
+    font-size: 1.25rem;
+    font-weight: 700;
+}
+
+.game-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.game-actions .btn {
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+}
+
+.game-board {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.players-circle {
+    position: relative;
+    width: min(90vw, 90vh);
+    height: min(90vw, 90vh);
+    max-width: 600px;
+    max-height: 600px;
+}
+
+.bomb-center {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 10;
+}
+
+.bomb {
+    font-size: 6rem;
+    animation: bombShake 0.5s infinite;
+}
+
+.bomb.critical {
+    animation: bombShake 0.1s infinite, bombGlow 0.5s infinite;
+}
+
+@keyframes bombShake {
+    0%, 100% { transform: rotate(-5deg); }
+    50% { transform: rotate(5deg); }
+}
+
+@keyframes bombGlow {
+    0%, 100% { filter: drop-shadow(0 0 10px #ef4444); }
+    50% { filter: drop-shadow(0 0 30px #ef4444); }
+}
+
+.syllable-display {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, calc(-50% + 80px));
+    text-align: center;
+    z-index: 11;
+}
+
+.syllable {
+    font-size: 3rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-transform: uppercase;
+    letter-spacing: 0.2rem;
+}
+
+.timer-bar {
+    margin-top: 1rem;
+    width: 200px;
+    height: 8px;
+    background: var(--bg-tertiary);
+    border-radius: 4px;
+    overflow: hidden;
+    position: relative;
+}
+
+.timer-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent-success), var(--accent-warning), var(--accent-danger));
+    transition: width 0.1s linear;
+}
+
+.timer-text {
+    text-align: center;
+    margin-top: 0.5rem;
+    font-weight: 700;
+    font-size: 1.125rem;
+}
+
+.game-player {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    transition: var(--transition);
+}
+
+.game-player-avatar {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    border: 3px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    background: var(--bg-secondary);
+    transition: var(--transition);
+}
+
+.game-player.active .game-player-avatar {
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 20px var(--accent-primary);
+    animation: activePlayer 1s infinite;
+}
+
+@keyframes activePlayer {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+}
+
+.game-player.me .game-player-avatar {
+    border-color: var(--accent-success);
+    border-width: 4px;
+}
+
+.game-player.out .game-player-avatar {
+    opacity: 0.3;
+    filter: grayscale(1);
+}
+
+.game-player-name {
+    font-size: 0.875rem;
+    font-weight: 600;
+    background: var(--bg-secondary);
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    white-space: nowrap;
+}
+
+.game-player-lives {
+    font-size: 1rem;
+}
+
+.player-arrow {
+    position: absolute;
+    top: -30px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 2rem;
+    animation: arrowBounce 1s infinite;
+}
+
+@keyframes arrowBounce {
+    0%, 100% { transform: translateX(-50%) translateY(0); }
+    50% { transform: translateX(-50%) translateY(-10px); }
+}
+
+.game-input-area {
+    padding: 1.5rem;
+    background: var(--bg-secondary);
+    border-top: 2px solid var(--border-color);
+    flex-shrink: 0;
+}
+
+.input-wrapper {
+    display: flex;
+    gap: 1rem;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.word-input {
+    flex: 1;
+    font-size: 1.25rem;
+    text-transform: uppercase;
+    text-align: center;
+    font-weight: 700;
+    letter-spacing: 0.1rem;
+}
+
+.submit-btn {
+    padding: 1rem 2rem;
+    font-size: 1.125rem;
+}
+
+.game-status {
+    text-align: center;
+    padding: 1rem;
+    font-size: 1.125rem;
+    color: var(--text-secondary);
+}
+
+.used-words-section {
+    position: absolute;
+    top: 80px;
+    left: 1rem;
+    max-width: 250px;
+    max-height: calc(100vh - 200px);
+    overflow-y: auto;
+    padding: 1rem;
+    background: var(--bg-overlay);
+    border-radius: var(--border-radius);
+    backdrop-filter: blur(8px);
+}
+
+.used-words-title {
+    font-size: 0.875rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    color: var(--text-tertiary);
+}
+
+.used-words-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.used-word {
+    padding: 0.5rem;
+    background: var(--bg-secondary);
+    border-radius: 6px;
+    font-size: 0.875rem;
+    text-transform: uppercase;
+}
+
+/* ===== CHAT ===== */
+.chat-toggle {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    z-index: 100;
+}
+
+.chat-toggle-btn {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: var(--accent-primary);
+    border: none;
+    cursor: pointer;
+    font-size: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: var(--shadow-lg);
+    transition: var(--transition);
+    position: relative;
+}
+
+.chat-toggle-btn:hover {
+    transform: scale(1.1);
+}
+
+.chat-badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    width: 24px;
+    height: 24px;
+    background: var(--accent-danger);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+.chat-panel {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    width: 350px;
+    max-height: 500px;
+    background: var(--bg-secondary);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-lg);
+    display: flex;
+    flex-direction: column;
+    z-index: 99;
+    transform: scale(0);
+    transform-origin: bottom right;
+    transition: var(--transition);
+}
+
+.chat-panel.active {
+    transform: scale(1);
+}
+
+.chat-header {
+    padding: 1rem;
+    border-bottom: 2px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.chat-title {
+    font-weight: 700;
+}
+
+.chat-close {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1.5rem;
+    color: var(--text-tertiary);
+    transition: var(--transition);
+}
+
+.chat-close:hover {
+    color: var(--accent-danger);
+}
+
+.chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.chat-message {
+    display: flex;
+    gap: 0.5rem;
+    align-items: flex-start;
+}
+
+.chat-message-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    flex-shrink: 0;
+}
+
+.chat-message-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.chat-message-name {
+    font-size: 0.75rem;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+}
+
+.chat-message-text {
+    background: var(--bg-tertiary);
+    padding: 0.5rem 0.75rem;
+    border-radius: 8px;
+    word-wrap: break-word;
+}
+
+.chat-message.system {
+    justify-content: center;
+}
+
+.chat-message.system .chat-message-text {
+    background: none;
+    color: var(--text-tertiary);
+    font-size: 0.875rem;
+    text-align: center;
+}
+
+.chat-input-area {
+    padding: 1rem;
+    border-top: 2px solid var(--border-color);
+}
+
+.reactions-bar {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+    overflow-x: auto;
+}
+
+.reaction-btn {
+    background: var(--bg-tertiary);
+    border: none;
+    border-radius: 6px;
+    padding: 0.5rem;
+    font-size: 1.25rem;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.reaction-btn:hover {
+    transform: scale(1.2);
+}
+
+.chat-input-wrapper {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.chat-input {
+    flex: 1;
+    padding: 0.75rem;
+    font-size: 0.875rem;
+}
+
+.chat-send {
+    padding: 0.75rem;
+    background: var(--accent-primary);
+    border: none;
+    border-radius: var(--border-radius);
+    color: white;
+    cursor: pointer;
+    font-size: 1.25rem;
+    transition: var(--transition);
+}
+
+.chat-send:hover {
+    background: var(--accent-secondary);
+}
+
+/* ===== SOLO MODE ===== */
+.solo-container {
+    max-width: 800px;
+    width: 100%;
+    margin: 0 auto;
+}
+
+.solo-score-section {
+    text-align: center;
+    padding: 2rem;
+    background: var(--bg-secondary);
+    border-radius: var(--border-radius);
+    margin-bottom: 2rem;
+}
+
+.solo-score {
+    font-size: 4rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.solo-streak {
+    font-size: 1.25rem;
+    color: var(--text-secondary);
+    margin-top: 0.5rem;
+}
+
+.streak-fire {
+    font-size: 1.5rem;
+    display: inline-block;
+    animation: fireFlicker 0.5s infinite;
+}
+
+@keyframes fireFlicker {
+    0%, 100% { transform: scale(1) rotate(-5deg); }
+    50% { transform: scale(1.2) rotate(5deg); }
+}
+
+.achievements-section {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.achievement {
+    text-align: center;
+    padding: 1rem;
+    background: var(--bg-secondary);
+    border-radius: var(--border-radius);
+    transition: var(--transition);
+}
+
+.achievement.unlocked {
+    border: 2px solid var(--accent-success);
+}
+
+.achievement-icon {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+    filter: grayscale(1);
+    opacity: 0.3;
+    transition: var(--transition);
+}
+
+.achievement.unlocked .achievement-icon {
+    filter: grayscale(0);
+    opacity: 1;
+    animation: achievementPop 0.5s;
+}
+
+@keyframes achievementPop {
+    0% { transform: scale(0); }
+    50% { transform: scale(1.2); }
+    100% { transform: scale(1); }
+}
+
+.achievement-name {
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+.achievement-desc {
+    font-size: 0.75rem;
+    color: var(--text-tertiary);
+}
+
+/* ===== VICTORY SCREEN ===== */
+.victory-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.9);
+    z-index: 3000;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 0.5s;
+}
+
+.victory-overlay.active {
+    display: flex;
+}
+
+.victory-content {
+    text-align: center;
+    padding: 2rem;
+    animation: victoryBounce 0.8s;
+}
+
+@keyframes victoryBounce {
+    0% { transform: scale(0); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
+.victory-icon {
+    font-size: 8rem;
+    margin-bottom: 1rem;
+}
+
+.victory-title {
+    font-size: 3rem;
+    font-weight: 800;
+    margin-bottom: 1rem;
+    background: linear-gradient(135deg, #ffd700, #ffed4e);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.victory-winner {
+    font-size: 2rem;
+    color: var(--text-primary);
+    margin-bottom: 2rem;
+}
+
+.victory-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+}
+
+/* ===== NOTIFICATIONS ===== */
+.notification {
+    position: fixed;
+    top: 2rem;
+    right: 2rem;
+    background: var(--bg-secondary);
+    border-radius: var(--border-radius);
+    padding: 1rem 1.5rem;
+    box-shadow: var(--shadow-lg);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    z-index: 4000;
+    animation: slideInRight 0.3s;
+    max-width: 400px;
+}
+
+@keyframes slideInRight {
+    from { transform: translateX(500px); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+.notification.success {
+    border-left: 4px solid var(--accent-success);
+}
+
+.notification.error {
+    border-left: 4px solid var(--accent-danger);
+}
+
+.notification.info {
+    border-left: 4px solid var(--accent-primary);
+}
+
+.notification-icon {
+    font-size: 1.5rem;
+}
+
+.notification-content {
+    flex: 1;
+}
+
+.notification-title {
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+}
+
+.notification-message {
+    font-size: 0.875rem;
+    color: var(--text-tertiary);
+}
+
+/* ===== EMOJI PICKER ===== */
+.emoji-picker {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    margin-top: 0.5rem;
+    background: var(--bg-secondary);
+    border: 2px solid var(--border-color);
+    border-radius: var(--border-radius);
+    padding: 1rem;
+    box-shadow: var(--shadow-lg);
+    z-index: 100;
+    display: none;
+    max-width: 300px;
+}
+
+.emoji-picker.active {
+    display: block;
+}
+
+.emoji-category {
+    margin-bottom: 1rem;
+}
+
+.emoji-category-title {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--text-tertiary);
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+}
+
+.emoji-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 0.5rem;
+}
+
+.emoji-option {
+    font-size: 2rem;
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 6px;
+    transition: var(--transition);
+    text-align: center;
+}
+
+.emoji-option:hover {
+    background: var(--bg-tertiary);
+    transform: scale(1.2);
+}
+
+/* ===== LOADING ===== */
+.loading-spinner {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 3px solid var(--border-color);
+    border-top-color: var(--accent-primary);
     border-radius: 50%;
     animation: spin 0.8s linear infinite;
 }
@@ -219,1570 +1416,1836 @@ h1, h2, h3 {
     to { transform: rotate(360deg); }
 }
 
-/* Config */
-#config .config-wrap {
-    max-width: 900px;
-    margin: 40px auto;
-}
-
-.config-grid {
-    display: grid;
-    grid-template-columns: 2fr 1fr;
-    gap: 20px;
-    margin-bottom: 20px;
-}
-
-.option {
-    margin-bottom: 20px;
-}
-
-.option label {
-    display: block;
-    font-size: 14px;
-    font-weight: 500;
-    color: var(--text-dim);
-    margin-bottom: 8px;
-}
-
-.range-group {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-.range {
-    flex: 1;
-    height: 6px;
-    -webkit-appearance: none;
-    background: var(--bg-elevated);
-    border-radius: 3px;
-}
-
-.range::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    width: 18px;
-    height: 18px;
-    background: var(--primary);
-    border-radius: 50%;
-    cursor: pointer;
-}
-
-.range-val {
-    min-width: 40px;
-    padding: 4px 12px;
-    background: var(--primary);
-    color: white;
-    border-radius: 6px;
-    font-size: 14px;
-    font-weight: 600;
-    text-align: center;
-}
-
-.radio-group {
-    display: flex;
-    gap: 12px;
-}
-
-.radio-btn input {
-    display: none;
-}
-
-.radio-btn label {
-    display: block;
-    padding: 10px 16px;
-    background: var(--bg-elevated);
-    border: 2px solid var(--border);
-    border-radius: 8px;
-    cursor: pointer;
-    transition: all 0.2s;
-    text-align: center;
-}
-
-.radio-btn input:checked + label {
-    background: rgba(0, 201, 255, 0.1);
-    border-color: var(--primary);
-    color: var(--primary);
-}
-
-.code-big {
-    font-size: 40px;
-    font-family: 'Outfit', monospace;
-    letter-spacing: 6px;
-    text-align: center;
-    padding: 20px;
-    background: linear-gradient(135deg, rgba(0, 201, 255, 0.1), rgba(146, 254, 157, 0.1));
-    border: 2px solid var(--primary);
-    border-radius: 12px;
-    margin-bottom: 16px;
-}
-
-/* Lobby */
-.lobby-wrap {
-    max-width: 900px;
-    margin: 40px auto;
-    text-align: center;
-}
-
-.lobby-code {
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-    padding: 16px 32px;
-    background: var(--bg-card);
-    border: 2px solid var(--primary);
-    border-radius: 12px;
-    font-size: 28px;
-    font-family: 'Outfit', monospace;
-    letter-spacing: 4px;
-    margin: 20px 0;
-}
-
-.players-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-    gap: 16px;
-    margin: 24px 0;
-}
-
-.player {
-    background: var(--bg-card);
-    border: 2px solid var(--border);
-    border-radius: 12px;
-    padding: 16px;
-    text-align: center;
-    animation: pop 0.3s ease-out;
-}
-
-@keyframes pop {
-    from { transform: scale(0.9); opacity: 0; }
-    to { transform: scale(1); opacity: 1; }
-}
-
-.player.host {
-    border-color: var(--primary);
-}
-
-.player-avatar {
-    font-size: 40px;
-    margin-bottom: 8px;
-}
-
-.player-name {
-    font-weight: 600;
-    word-break: break-word;
-}
-
-.badge {
-    display: inline-block;
-    padding: 2px 8px;
-    background: var(--primary);
-    color: white;
-    border-radius: 4px;
-    font-size: 11px;
-    font-weight: 600;
-    text-transform: uppercase;
-    margin-top: 4px;
-}
-
-/* Game */
-#game .game-wrap {
-    height: calc(100vh - 80px);
-    display: flex;
-    flex-direction: column;
-    padding: 20px;
-}
-
-.game-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background: var(--bg-card);
-    border-radius: 12px;
-    padding: 16px 24px;
-    margin-bottom: 20px;
-}
-
-.stats {
-    display: flex;
-    gap: 24px;
-}
-
-.stat {
-    display: flex;
-    flex-direction: column;
-}
-
-.stat-label {
-    font-size: 11px;
-    color: var(--text-dim);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.stat-value {
-    font-size: 20px;
-    font-weight: 700;
-    font-family: 'Outfit', sans-serif;
-}
-
-.game-content {
-    flex: 1;
-    display: grid;
-    grid-template-columns: 220px 1fr 220px;
-    gap: 20px;
-    min-height: 0;
-}
-
-.sidebar {
-    background: var(--bg-card);
-    border-radius: 12px;
-    padding: 16px;
-    overflow-y: auto;
-}
-
-.sidebar-title {
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--text-dim);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-bottom: 12px;
-}
-
-.game-players .player {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 10px;
-    background: var(--bg-elevated);
-    border: 2px solid var(--border);
-    border-radius: 10px;
-    margin-bottom: 10px;
-    position: relative;
-}
-
-.game-players .player.active {
-    border-color: var(--primary);
-    box-shadow: 0 0 20px rgba(0, 201, 255, 0.2);
-}
-
-.game-players .player.out {
-    opacity: 0.3;
-    filter: grayscale(1);
-}
-
-.arrow {
-    position: absolute;
-    left: -25px;
-    font-size: 20px;
-    animation: bounce 0.6s infinite;
-}
-
-@keyframes bounce {
-    0%, 100% { transform: translateX(0); }
-    50% { transform: translateX(-5px); }
-}
-
-.arena {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    gap: 30px;
-    background: var(--bg-card);
-    border-radius: 16px;
-    padding: 40px;
-}
-
-.bomb-wrap {
-    text-align: center;
-}
-
-.bomb {
-    font-size: 100px;
-    display: block;
-    margin-bottom: 20px;
-    animation: float 2s ease-in-out infinite;
-}
-
-.bomb.critical {
-    animation: shake 0.2s infinite, glow 0.5s infinite alternate;
-}
-
-@keyframes shake {
-    0%, 100% { transform: translate(0, 0); }
-    25% { transform: translate(-3px, 0); }
-    75% { transform: translate(3px, 0); }
-}
-
-@keyframes glow {
-    from { filter: drop-shadow(0 0 10px rgba(255, 61, 113, 0.5)); }
-    to { filter: drop-shadow(0 0 30px rgba(255, 61, 113, 0.8)); }
-}
-
-.syllable {
-    font-size: 56px;
-    font-weight: 800;
-    font-family: 'Outfit', sans-serif;
-    background: linear-gradient(135deg, var(--primary), var(--secondary));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    letter-spacing: 6px;
-}
-
-.timer-wrap {
-    width: 100%;
-    max-width: 400px;
-}
-
-.timer-bar {
-    height: 10px;
-    background: var(--bg-elevated);
-    border-radius: 10px;
-    overflow: hidden;
-    margin-bottom: 8px;
-}
-
-.timer-fill {
-    height: 100%;
-    background: linear-gradient(90deg, var(--secondary), var(--primary), var(--accent));
-    border-radius: 10px;
-    transition: width 0.1s linear;
-}
-
-.timer-text {
-    text-align: center;
-    font-size: 16px;
-    font-weight: 600;
-    font-family: 'Outfit', monospace;
-}
-
-.input-area {
-    width: 100%;
-    max-width: 500px;
-}
-
-.input-area.hide {
-    display: none;
-}
-
-.turn-msg {
-    text-align: center;
-    font-size: 16px;
-    font-weight: 600;
-    color: var(--primary);
-    margin-bottom: 16px;
-    animation: pulse 1s infinite;
-}
-
-@keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.6; }
-}
-
-.input-group {
-    display: flex;
-    gap: 12px;
-}
-
-.status-msg {
-    text-align: center;
-    font-size: 15px;
-    color: var(--text-dim);
-}
-
-.words-wrap {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-}
-
-.word {
-    padding: 5px 10px;
-    background: var(--bg-elevated);
-    border-radius: 6px;
-    font-size: 13px;
-}
-
-/* Modal */
-.modal {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.8);
-    backdrop-filter: blur(8px);
-    z-index: 1000;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
-}
-
-.modal.active {
-    display: flex;
-}
-
-.modal-content {
-    max-width: 450px;
-    width: 100%;
-    animation: slideUp 0.3s;
-}
-
-@keyframes slideUp {
-    from { transform: translateY(20px); opacity: 0; }
-    to { transform: translateY(0); opacity: 1; }
-}
-
-.modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-}
-
-.modal-close {
-    width: 32px;
-    height: 32px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: var(--bg-elevated);
-    border: none;
-    border-radius: 8px;
-    color: var(--text-dim);
-    font-size: 20px;
-    cursor: pointer;
-}
-
-/* Victory */
-.victory {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.95);
-    z-index: 2000;
-    align-items: center;
-    justify-content: center;
-}
-
-.victory.active {
-    display: flex;
-}
-
-.victory-content {
-    text-align: center;
-    max-width: 600px;
-}
-
-.victory-icon {
-    font-size: 100px;
-    margin-bottom: 20px;
-    animation: rotate 2s ease-in-out infinite;
-}
-
-@keyframes rotate {
-    0%, 100% { transform: rotate(-5deg); }
-    50% { transform: rotate(5deg); }
-}
-
-.victory-title {
-    font-size: 44px;
-    margin-bottom: 16px;
-}
-
-.victory-winner {
-    font-size: 28px;
-    color: var(--text-dim);
-    margin-bottom: 40px;
-}
-
-/* Notif */
-.notif {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    max-width: 380px;
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 16px 20px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
-    display: flex;
-    gap: 12px;
-    animation: slideIn 0.3s;
-    z-index: 1500;
-}
-
-@keyframes slideIn {
-    from { transform: translateX(100px); opacity: 0; }
-    to { transform: translateX(0); opacity: 1; }
-}
-
-.notif-icon {
-    font-size: 20px;
-}
-
-.notif-content {
-    flex: 1;
-}
-
-.notif-title {
-    font-weight: 600;
-    margin-bottom: 4px;
-}
-
-.notif-msg {
-    font-size: 14px;
-    color: var(--text-dim);
-}
-
-.notif.success { border-left: 4px solid var(--secondary); }
-.notif.error { border-left: 4px solid var(--accent); }
-.notif.info { border-left: 4px solid var(--primary); }
-
-/* Responsive */
-@media (max-width: 1024px) {
-    .config-grid {
-        grid-template-columns: 1fr;
-    }
-    
-    .game-content {
-        grid-template-columns: 1fr;
-    }
-    
-    .sidebar {
-        max-height: 200px;
-    }
-}
-
+/* ===== RESPONSIVE ===== */
 @media (max-width: 768px) {
     .title {
-        font-size: 44px;
+        font-size: 2rem;
     }
     
-    .actions {
+    .actions-grid {
         grid-template-columns: 1fr;
+    }
+    
+    .modal-content {
+        padding: 1.5rem;
     }
     
     .players-grid {
-        grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+        grid-template-columns: 1fr;
     }
     
-    .code-big {
-        font-size: 28px;
+    .lobby-code {
+        font-size: 2rem;
+        letter-spacing: 0.3rem;
     }
     
     .bomb {
-        font-size: 70px;
+        font-size: 4rem;
     }
     
     .syllable {
-        font-size: 40px;
+        font-size: 2rem;
+    }
+    
+    .used-words-section {
+        position: static;
+        max-width: 100%;
+        margin-top: 1rem;
+    }
+    
+    .chat-panel {
+        width: calc(100% - 2rem);
+        max-width: 350px;
+    }
+    
+    .game-info {
+        flex-direction: column;
+        gap: 0.5rem;
+        align-items: flex-start;
+    }
+    
+    .game-actions {
+        flex-direction: column;
+        width: 100%;
+    }
+    
+    .game-actions .btn {
+        width: 100%;
+    }
+    
+    .input-wrapper {
+        flex-direction: column;
+    }
+    
+    .victory-title {
+        font-size: 2rem;
+    }
+    
+    .victory-winner {
+        font-size: 1.5rem;
     }
 }
 
-.hide {
-    display: none !important;
+@media (max-width: 480px) {
+    .logo {
+        font-size: 3rem;
+    }
+    
+    .game-player-avatar {
+        width: 40px;
+        height: 40px;
+        font-size: 1.5rem;
+    }
+    
+    .game-player-name {
+        font-size: 0.75rem;
+    }
 }
 
-.mb-4 {
-    margin-bottom: 16px;
+/* ===== SCROLLBAR ===== */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
 }
 
-.mt-4 {
-    margin-top: 16px;
+::-webkit-scrollbar-track {
+    background: var(--bg-tertiary);
 }
 
-.text-center {
-    text-align: center;
+::-webkit-scrollbar-thumb {
+    background: var(--accent-primary);
+    border-radius: 4px;
 }
 
-.flex {
-    display: flex;
-}
-
-.gap-4 {
-    gap: 16px;
+::-webkit-scrollbar-thumb:hover {
+    background: var(--accent-secondary);
 }
     </style>
 </head>
 <body>
 
+<!-- Theme Toggle -->
+<div class="theme-toggle">
+    <button class="theme-btn" id="themeToggle">
+        <span id="themeIcon">🌙</span>
+    </button>
+</div>
+
+<!-- Home Screen -->
 <div id="home" class="screen active">
     <div class="home-content">
-        <h1 class="title">💣 Tic Tac Boom</h1>
-        <p class="subtitle">Jeu de mots explosif multijoueur</p>
+        <div class="logo">💣</div>
+        <h1 class="title">Tic Tac Boom</h1>
+        <p class="subtitle">Trouve un mot avant que la bombe n'explose !</p>
         
-        <div class="username-box">
-            <label style="display: block; margin-bottom: 12px; font-weight: 500;">Votre pseudo</label>
-            <input type="text" id="username" class="input" placeholder="Entrez votre pseudo..." maxlength="15">
-            <div class="text-center mt-4">
-                <span id="dict-status" class="status loading">
-                    <span class="spinner"></span>
-                    <span>Chargement...</span>
-                </span>
+        <div class="username-section">
+            <label class="username-label">Ton pseudo</label>
+            <div class="username-input-group">
+                <div style="position: relative;">
+                    <button class="emoji-select" id="emojiBtn">😀</button>
+                    <div class="emoji-picker" id="emojiPicker"></div>
+                </div>
+                <input type="text" class="input" id="usernameInput" placeholder="Ton pseudo..." maxlength="20">
+                <input type="color" class="color-select" id="colorPicker" value="#3b82f6">
             </div>
         </div>
         
-        <div class="actions">
-            <button class="btn btn-primary" onclick="Game.showCreate()">
-                <span>🎮 Créer</span>
-            </button>
-            <button class="btn btn-secondary" onclick="Game.showJoin()">
-                <span>🚪 Rejoindre</span>
-            </button>
+        <div class="actions-grid">
+            <div class="action-card" id="soloBtn">
+                <div class="action-card-icon">🎯</div>
+                <div class="action-card-title">Mode Solo</div>
+                <div class="action-card-desc">Entraîne-toi seul</div>
+            </div>
+            <div class="action-card" id="createBtn">
+                <div class="action-card-icon">🎮</div>
+                <div class="action-card-title">Créer</div>
+                <div class="action-card-desc">Nouvelle partie</div>
+            </div>
+            <div class="action-card" id="joinBtn">
+                <div class="action-card-icon">🔗</div>
+                <div class="action-card-title">Rejoindre</div>
+                <div class="action-card-desc">Code à 6 chiffres</div>
+            </div>
+            <div class="action-card" id="rulesBtn">
+                <div class="action-card-icon">📖</div>
+                <div class="action-card-title">Règles</div>
+                <div class="action-card-desc">Comment jouer</div>
+            </div>
         </div>
         
-        <p style="font-size: 14px; color: var(--text-dim);">
-            Jusqu'à 30 joueurs • Trouvez des mots avant l'explosion !
-        </p>
-    </div>
-</div>
-
-<div id="config" class="screen">
-    <div class="container">
-        <div class="config-wrap">
-            <div class="card mb-4">
-                <h2 style="margin-bottom: 8px;">Configuration de la Partie</h2>
-                <p style="color: var(--text-dim); font-size: 14px;">Personnalisez votre jeu</p>
-            </div>
-            
-            <div class="config-grid">
-                <div class="card">
-                    <h3 style="margin-bottom: 20px; font-size: 18px;">⚙️ Paramètres</h3>
-                    
-                    <div class="option">
-                        <label>Vies par joueur</label>
-                        <div class="range-group">
-                            <input type="range" class="range" id="lives" min="1" max="5" value="3" oninput="Game.updateRange('lives')">
-                            <span class="range-val" id="lives-val">3</span>
-                        </div>
-                    </div>
-                    
-                    <div class="option">
-                        <label>Temps initial (secondes)</label>
-                        <div class="range-group">
-                            <input type="range" class="range" id="timer" min="5" max="30" value="15" oninput="Game.updateRange('timer')">
-                            <span class="range-val" id="timer-val">15</span>
-                        </div>
-                    </div>
-                    
-                    <div class="option">
-                        <label>Difficulté</label>
-                        <div class="radio-group">
-                            <div class="radio-btn">
-                                <input type="radio" id="easy" name="diff" value="easy">
-                                <label for="easy">😊 Facile</label>
-                            </div>
-                            <div class="radio-btn">
-                                <input type="radio" id="medium" name="diff" value="medium" checked>
-                                <label for="medium">😐 Moyen</label>
-                            </div>
-                            <div class="radio-btn">
-                                <input type="radio" id="hard" name="diff" value="hard">
-                                <label for="hard">😈 Dur</label>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div>
-                    <div class="card mb-4">
-                        <h3 style="margin-bottom: 16px; font-size: 18px;">🔑 Code</h3>
-                        <div class="code-big" id="config-code">XXXX</div>
-                        <button class="btn btn-secondary" style="width: 100%;" onclick="Game.copyCode()">
-                            📋 Copier
-                        </button>
-                    </div>
-                    
-                    <div class="card">
-                        <h3 style="margin-bottom: 12px; font-size: 18px;">
-                            👥 Joueurs (<span id="config-count">1</span>/30)
-                        </h3>
-                        <div id="config-players"></div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="flex gap-4" style="justify-content: center;">
-                <button class="btn btn-primary" id="start-btn" onclick="Game.start()" disabled>
-                    🚀 Lancer
-                </button>
-                <button class="btn btn-danger" onclick="Game.cancel()">
-                    ❌ Annuler
-                </button>
-            </div>
+        <div id="connectionStatus" class="connection-status hidden">
+            <div class="loading-spinner"></div>
+            <span>Connexion en cours...</span>
         </div>
     </div>
 </div>
 
-<div id="lobby" class="screen">
-    <div class="container">
-        <div class="lobby-wrap">
-            <h2 class="mb-4">Salon d'Attente</h2>
-            <div class="lobby-code" id="lobby-code">XXXX</div>
-            <p style="color: var(--text-dim); margin-bottom: 24px;">
-                En attente du démarrage...
-            </p>
-            
-            <div class="card mb-4">
-                <h3 class="mb-4">
-                    Joueurs (<span id="lobby-count">0</span>/30)
-                </h3>
-                <div class="players-grid" id="lobby-players"></div>
-            </div>
-            
-            <button class="btn btn-danger" onclick="Game.leave()">
-                Quitter
-            </button>
-        </div>
-    </div>
-</div>
-
-<div id="game" class="screen">
-    <div class="game-wrap">
-        <div class="game-header">
-            <div class="stats">
-                <div class="stat">
-                    <span class="stat-label">Code</span>
-                    <span class="stat-value" id="game-code">XXXX</span>
-                </div>
-                <div class="stat">
-                    <span class="stat-label">Joueurs</span>
-                    <span class="stat-value" id="game-count">0</span>
-                </div>
-                <div class="stat">
-                    <span class="stat-label">Mots</span>
-                    <span class="stat-value" id="game-words">0</span>
-                </div>
-            </div>
-            <button class="btn btn-danger btn-sm" onclick="Game.leave()">Quitter</button>
-        </div>
-        
-        <div class="game-content">
-            <div class="sidebar">
-                <h4 class="sidebar-title">Joueurs</h4>
-                <div id="game-players" class="game-players"></div>
-            </div>
-            
-            <div class="arena">
-                <div class="bomb-wrap">
-                    <span class="bomb" id="bomb">💣</span>
-                    <div class="syllable" id="syl">...</div>
-                </div>
-                
-                <div class="timer-wrap">
-                    <div class="timer-bar">
-                        <div class="timer-fill" id="timer-fill"></div>
-                    </div>
-                    <div class="timer-text" id="timer-text">0.0s</div>
-                </div>
-                
-                <div class="input-area hide" id="input-area">
-                    <div class="turn-msg">🔥 À VOUS ! 🔥</div>
-                    <div class="input-group">
-                        <input type="text" id="word" class="input" placeholder="Votre mot..." style="text-transform: uppercase;">
-                        <button class="btn btn-primary" onclick="Game.submit()">✓</button>
-                    </div>
-                </div>
-                
-                <div class="status-msg" id="game-status">En attente...</div>
-            </div>
-            
-            <div class="sidebar">
-                <h4 class="sidebar-title">Mots</h4>
-                <div class="words-wrap" id="used-words"></div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div id="join-modal" class="modal">
-    <div class="modal-content card">
+<!-- Create Game Modal -->
+<div id="createModal" class="modal">
+    <div class="modal-content">
         <div class="modal-header">
-            <h3>Rejoindre</h3>
-            <button class="modal-close" onclick="Game.closeJoin()">×</button>
+            <h2 class="modal-title">Créer une partie</h2>
+            <button class="modal-close" id="closeCreateModal">×</button>
         </div>
-        <div class="mb-4">
-            <label style="display: block; margin-bottom: 8px; font-size: 14px;">Code du salon</label>
-            <input type="text" id="join-code" class="input" placeholder="Ex: ABCD" maxlength="4" style="text-transform: uppercase;">
+        
+        <div class="form-group">
+            <label class="form-label">Nombre de vies</label>
+            <div class="range-group">
+                <input type="range" class="range" id="livesRange" min="1" max="10" value="3">
+                <div class="range-value" id="livesValue">3</div>
+            </div>
         </div>
-        <button class="btn btn-primary" style="width: 100%;" onclick="Game.join()">
+        
+        <div class="form-group">
+            <label class="form-label">Temps initial (secondes)</label>
+            <div class="range-group">
+                <input type="range" class="range" id="timeRange" min="5" max="30" value="15">
+                <div class="range-value" id="timeValue">15s</div>
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <label class="form-label">Position de la syllabe</label>
+            <div class="radio-group">
+                <div class="radio-option">
+                    <input type="radio" name="position" id="posAny" value="ANY" checked>
+                    <label for="posAny">N'importe où</label>
+                </div>
+                <div class="radio-option">
+                    <input type="radio" name="position" id="posStart" value="START">
+                    <label for="posStart">Début</label>
+                </div>
+                <div class="radio-option">
+                    <input type="radio" name="position" id="posEnd" value="END">
+                    <label for="posEnd">Fin</label>
+                </div>
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <label class="form-label">Longueur de syllabe</label>
+            <div class="radio-group">
+                <div class="radio-option">
+                    <input type="radio" name="sylLength" id="syl2" value="2" checked>
+                    <label for="syl2">2 lettres</label>
+                </div>
+                <div class="radio-option">
+                    <input type="radio" name="sylLength" id="syl3" value="3">
+                    <label for="syl3">3 lettres</label>
+                </div>
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <label class="checkbox-option">
+                <input type="checkbox" id="strictMode">
+                <span>Mode strict (dictionnaire)</span>
+            </label>
+        </div>
+        
+        <button class="btn btn-primary" id="confirmCreate" style="width: 100%;">
+            Créer la partie
+        </button>
+    </div>
+</div>
+
+<!-- Join Game Modal -->
+<div id="joinModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 class="modal-title">Rejoindre une partie</h2>
+            <button class="modal-close" id="closeJoinModal">×</button>
+        </div>
+        
+        <div class="form-group">
+            <label class="form-label">Code de la partie</label>
+            <input type="text" class="input" id="joinCodeInput" placeholder="000000" maxlength="6" style="text-align: center; font-size: 2rem; letter-spacing: 0.5rem; font-weight: 700;">
+        </div>
+        
+        <button class="btn btn-primary" id="confirmJoin" style="width: 100%;">
             Rejoindre
         </button>
     </div>
 </div>
 
-<div id="victory" class="victory">
-    <div class="victory-content">
-        <div class="victory-icon">🏆</div>
-        <h2 class="victory-title">VICTOIRE !</h2>
-        <p class="victory-winner" id="winner">Gagnant</p>
-        <button class="btn btn-primary" onclick="Game.home()">
-            Retour
+<!-- Rules Modal -->
+<div id="rulesModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 class="modal-title">Règles du jeu</h2>
+            <button class="modal-close" id="closeRulesModal">×</button>
+        </div>
+        
+        <div style="line-height: 1.8;">
+            <h3 style="margin-top: 1rem; margin-bottom: 0.5rem;">🎯 Objectif</h3>
+            <p>Trouve un mot contenant la syllabe affichée avant que le temps n'expire !</p>
+            
+            <h3 style="margin-top: 1rem; margin-bottom: 0.5rem;">🎮 Déroulement</h3>
+            <p>• Chaque joueur joue à tour de rôle<br>
+            • Une syllabe est affichée au centre<br>
+            • Trouve un mot contenant cette syllabe<br>
+            • Le temps diminue à chaque tour<br>
+            • Si le temps expire, tu perds une vie ❤️</p>
+            
+            <h3 style="margin-top: 1rem; margin-bottom: 0.5rem;">🏆 Victoire</h3>
+            <p>Le dernier joueur avec des vies gagne !</p>
+            
+            <h3 style="margin-top: 1rem; margin-bottom: 0.5rem;">💡 Astuces</h3>
+            <p>• Les mots déjà utilisés sont interdits<br>
+            • Plus tu joues vite, plus le temps diminue<br>
+            • En mode strict, seuls les mots du dictionnaire sont acceptés</p>
+        </div>
+        
+        <button class="btn btn-primary" id="closeRulesBtn" style="width: 100%; margin-top: 1rem;">
+            Compris !
         </button>
     </div>
 </div>
 
-<script>
-const Game = {
-    state: {
-        user: '',
-        peer: null,
-        id: null,
-        host: false,
-        code: '',
-        conn: null,
-        game: null,
-        dict: new Set()
-    },
-    
-    syl: {
-        easy: ['BA', 'BE', 'BI', 'BO', 'BU', 'CA', 'CO', 'DA', 'DE', 'DI', 'DO', 'FA', 'FE', 'FI', 'FO', 'GA', 'GO', 'LA', 'LE', 'LI', 'LO', 'MA', 'ME', 'MI', 'MO', 'NA', 'NE', 'NI', 'NO', 'PA', 'PE', 'PI', 'PO', 'RA', 'RE', 'RI', 'RO', 'SA', 'SE', 'SI', 'SO', 'TA', 'TE', 'TI', 'TO', 'VA', 'VE', 'VI', 'VO'],
-        medium: ['AN', 'EN', 'IN', 'ON', 'UN', 'OU', 'OI', 'AI', 'AU', 'EU', 'IL', 'AR', 'ER', 'IR', 'OR', 'UR', 'CH', 'PH', 'QU', 'TR', 'BR', 'CR', 'DR', 'FR', 'GR', 'PR', 'BL', 'CL', 'FL', 'GL', 'PL'],
-        hard: ['TION', 'MENT', 'ABLE', 'ANCE', 'ENCE', 'ESSE', 'ETTE', 'ISME', 'ISTE', 'EUR', 'AGE']
-    },
-    
-    init() {
-        const saved = localStorage.getItem('ttb_user');
-        if (saved) {
-            this.state.user = saved;
-            document.getElementById('username').value = saved;
-        }
+<!-- Lobby Screen -->
+<div id="lobby" class="screen">
+    <div class="lobby-container">
+        <div class="lobby-header">
+            <h1 class="title">Salon d'attente</h1>
+        </div>
         
-        document.getElementById('username').oninput = (e) => {
-            this.state.user = e.target.value.trim();
-            localStorage.setItem('ttb_user', this.state.user);
-        };
+        <div class="lobby-code-section">
+            <div class="lobby-code-label">Code de la partie</div>
+            <div class="lobby-code" id="lobbyCode">000000</div>
+            <button class="btn btn-secondary copy-code-btn" id="copyCodeBtn">
+                📋 Copier le code
+            </button>
+        </div>
         
-        document.getElementById('word').onkeypress = (e) => {
-            if (e.key === 'Enter') this.submit();
-        };
+        <div id="lobbyStatus" class="connection-status">
+            <div class="status-dot"></div>
+            <span>Connecté</span>
+            <div class="ping-display" id="lobbyPing">0ms</div>
+        </div>
         
-        document.getElementById('join-code').onkeypress = (e) => {
-            if (e.key === 'Enter') this.join();
-        };
+        <div class="players-section">
+            <div class="players-header">
+                <h2>Joueurs</h2>
+                <span class="players-count" id="playersCount">0/30</span>
+            </div>
+            <div class="players-grid" id="playersGrid"></div>
+        </div>
         
-        this.loadDict();
-        this.initPeer();
-    },
-    
-    async loadDict() {
-        const st = document.getElementById('dict-status');
-        try {
-            st.className = 'status loading';
-            st.innerHTML = '<span class="spinner"></span><span>Chargement...</span>';
+        <div class="lobby-actions">
+            <button class="btn btn-secondary" id="leaveLobbyBtn">Quitter</button>
+            <button class="btn btn-success" id="startGameBtn">Démarrer la partie</button>
+        </div>
+    </div>
+</div>
+
+<!-- Game Screen -->
+<div id="game" class="screen">
+    <div class="game-container">
+        <div class="game-header">
+            <div class="game-info">
+                <div class="game-stat">
+                    <div class="game-stat-label">Code</div>
+                    <div class="game-stat-value" id="gameCode">000000</div>
+                </div>
+                <div class="game-stat">
+                    <div class="game-stat-label">Joueurs</div>
+                    <div class="game-stat-value" id="gamePlayers">0</div>
+                </div>
+                <div class="game-stat">
+                    <div class="game-stat-label">Mots</div>
+                    <div class="game-stat-value" id="gameWords">0</div>
+                </div>
+            </div>
+            <div class="game-actions">
+                <button class="btn btn-danger" id="leaveGameBtn">Quitter</button>
+            </div>
+        </div>
+        
+        <div class="game-board">
+            <div class="used-words-section">
+                <div class="used-words-title">Mots utilisés</div>
+                <div class="used-words-list" id="usedWordsList"></div>
+            </div>
             
-            const res = await fetch('https://www.lexique.org/databases/Lexique383/Lexique383.tsv');
-            const txt = await res.text();
-            const lines = txt.split('\n');
-            
-            for (let i = 1; i < lines.length; i++) {
-                const line = lines[i].trim();
-                if (!line) continue;
+            <div class="players-circle" id="playersCircle">
+                <div class="bomb-center">
+                    <div class="bomb" id="bombIcon">💣</div>
+                </div>
                 
-                const cols = line.split('\t');
-                if (cols.length > 0) {
-                    const word = cols[0].toUpperCase().trim();
-                    if (word.length >= 3 && /^[A-ZÀ-ÿ]+$/.test(word)) {
-                        this.state.dict.add(word);
-                    }
-                }
-            }
+                <div class="syllable-display">
+                    <div class="syllable" id="syllableText">...</div>
+                    <div class="timer-bar">
+                        <div class="timer-fill" id="timerFill"></div>
+                    </div>
+                    <div class="timer-text" id="timerText">0.0s</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="game-input-area" id="gameInputArea">
+            <div class="input-wrapper">
+                <input type="text" class="input word-input" id="wordInput" placeholder="TON MOT...">
+                <button class="btn btn-success submit-btn" id="submitWordBtn">Valider</button>
+            </div>
+        </div>
+        
+        <div class="game-status hidden" id="gameStatusText"></div>
+    </div>
+</div>
+
+<!-- Solo Mode Screen -->
+<div id="solo" class="screen">
+    <div class="container">
+        <div class="solo-container">
+            <div style="text-align: center; margin-bottom: 2rem;">
+                <h1 class="title">Mode Solo</h1>
+                <p class="subtitle">Enchaîne les mots sans limite !</p>
+            </div>
             
-            st.className = 'status ready';
-            st.innerHTML = `<span>✓</span><span>${this.state.dict.size.toLocaleString()} mots</span>`;
-        } catch (e) {
-            console.error('Dict error:', e);
-            st.className = 'status ready';
-            st.innerHTML = '<span>⚠</span><span>Mode hors-ligne</span>';
-            this.loadFallback();
+            <div class="solo-score-section">
+                <div class="solo-score" id="soloScore">0</div>
+                <div class="solo-streak" id="soloStreak">
+                    <span class="streak-fire hidden">🔥</span>
+                    <span id="streakText">Commence à jouer !</span>
+                </div>
+            </div>
+            
+            <div class="card" style="margin-bottom: 2rem;">
+                <div style="text-align: center;">
+                    <div class="syllable" id="soloSyllable">...</div>
+                    <div class="timer-bar" style="margin: 1rem auto; max-width: 300px;">
+                        <div class="timer-fill" id="soloTimerFill"></div>
+                    </div>
+                    <div class="timer-text" id="soloTimerText">0.0s</div>
+                </div>
+                
+                <div class="input-wrapper" style="margin-top: 1.5rem;">
+                    <input type="text" class="input word-input" id="soloWordInput" placeholder="TON MOT...">
+                    <button class="btn btn-success submit-btn" id="soloSubmitBtn">Valider</button>
+                </div>
+            </div>
+            
+            <div class="achievements-section" id="achievementsGrid"></div>
+            
+            <div style="text-align: center;">
+                <button class="btn btn-secondary" id="quitSoloBtn">Retour à l'accueil</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Victory Overlay -->
+<div id="victoryOverlay" class="victory-overlay">
+    <div class="victory-content">
+        <div class="victory-icon">🏆</div>
+        <div class="victory-title">Victoire !</div>
+        <div class="victory-winner" id="victoryWinner"></div>
+        <div class="victory-actions">
+            <button class="btn btn-secondary" id="victoryHomeBtn">Accueil</button>
+            <button class="btn btn-primary" id="victoryRestartBtn">Rejouer</button>
+        </div>
+    </div>
+</div>
+
+<!-- Chat -->
+<div class="chat-toggle" id="chatToggle">
+    <button class="chat-toggle-btn">
+        💬
+        <span class="chat-badge hidden" id="chatBadge">0</span>
+    </button>
+</div>
+
+<div class="chat-panel" id="chatPanel">
+    <div class="chat-header">
+        <div class="chat-title">Chat</div>
+        <button class="chat-close" id="chatClose">×</button>
+    </div>
+    <div class="chat-messages" id="chatMessages"></div>
+    <div class="chat-input-area">
+        <div class="reactions-bar" id="reactionsBar">
+            <button class="reaction-btn" data-reaction="👍">👍</button>
+            <button class="reaction-btn" data-reaction="❤️">❤️</button>
+            <button class="reaction-btn" data-reaction="😂">😂</button>
+            <button class="reaction-btn" data-reaction="🔥">🔥</button>
+            <button class="reaction-btn" data-reaction="👏">👏</button>
+        </div>
+        <div class="chat-input-wrapper">
+            <input type="text" class="input chat-input" id="chatInput" placeholder="Message...">
+            <button class="chat-send" id="chatSend">➤</button>
+        </div>
+    </div>
+</div>
+
+<script>
+// ===== GAME STATE =====
+const GameState = {
+    peer: null,
+    peerId: null,
+    isHost: false,
+    username: '',
+    emoji: '😀',
+    color: '#3b82f6',
+    gameCode: '',
+    connection: null,
+    connections: [],
+    
+    game: {
+        code: '',
+        players: [],
+        config: {
+            lives: 3,
+            initialTime: 15,
+            position: 'ANY',
+            syllableLength: 2,
+            strict: false
+        },
+        currentPlayer: 0,
+        syllable: '',
+        timer: 0,
+        maxTimer: 15,
+        usedWords: [],
+        state: 'WAITING', // WAITING, PLAYING, ENDED
+        winner: null,
+        interval: null
+    },
+    
+    solo: {
+        score: 0,
+        streak: 0,
+        bestStreak: 0,
+        syllable: '',
+        timer: 0,
+        maxTimer: 15,
+        usedWords: [],
+        interval: null,
+        achievements: []
+    },
+    
+    chat: {
+        messages: [],
+        unread: 0
+    },
+    
+    ping: 0,
+    lastPingTime: 0,
+    
+    theme: 'dark'
+};
+
+// ===== DICTIONARY =====
+const syllables2 = ['BA','BE','BI','BO','BU','CA','CE','CI','CO','CU','DA','DE','DI','DO','DU','FA','FE','FI','FO','FU','GA','GE','GI','GO','GU','HA','HE','HI','HO','HU','JA','JE','JI','JO','JU','LA','LE','LI','LO','LU','MA','ME','MI','MO','MU','NA','NE','NI','NO','NU','PA','PE','PI','PO','PU','RA','RE','RI','RO','RU','SA','SE','SI','SO','SU','TA','TE','TI','TO','TU','VA','VE','VI','VO','VU','ZA','ZE','ZI','ZO','ZU','CH','PH','QU','AN','EN','IN','ON','UN','OU','OI','AU','EU','AI','EI'];
+const syllables3 = ['BAL','BAN','BAR','BAS','BAT','BEL','BEN','BER','BES','BET','BLA','BLE','BON','BOU','BRA','BRE','BRI','BRO','BRU','CAL','CAN','CAR','CAS','CAT','CEL','CER','CHA','CHE','CHI','CHO','CHU','CLA','CLE','COL','CON','COR','COU','CRA','CRE','CRI','CRO','DAN','DEM','DES','DIN','DIS','DON','DOU','DRA','DRE','DRO','FAC','FER','FIL','FIN','FLA','FLE','FOR','FOU','FRA','GAN','GAR','GEN','GLA','GON','GOU','GRA','GRE','GRO','HAL','HAN','HAU','HER','HON','HOU','JAN','JOU','LAC','LAN','LAR','LEM','LEN','LES','LIN','LON','LOU','MAL','MAN','MAR','MAS','MAT','MEN','MER','MIN','MON','MOR','MOU','NAL','NAN','NAT','NEL','NON','NOU','PAL','PAN','PAR','PAS','PAT','PEN','PER','PLA','PLE','PLI','PLO','PLU','POL','PON','POR','POU','PRA','PRE','PRI','PRO','QUA','QUE','QUI','RAL','RAN','RAP','RAT','REC','REN','RES','RIN','RON','ROU','SAL','SAN','SAU','SEC','SEM','SEN','SER','SIN','SON','SOU','TAC','TAN','TAR','TAS','TAT','TEM','TEN','TER','TIN','TON','TOR','TOU','TRA','TRE','TRI','TRO','VAL','VAN','VEN','VER','VIN','VOL','VOU'];
+
+const frenchWords = new Set([
+    'AMOUR','MAISON','SOLEIL','JARDIN','OISEAU','FLEUR','MONTAGNE','RIVIÈRE','NUAGE','ÉTOILE',
+    'BATEAU','CHÂTEAU','FORÊT','PLAGE','CIEL','ROUTE','VILLE','PAIN','FROMAGE','VIN',
+    'LIVRE','MUSIQUE','DANSE','CHANT','RIRE','JOIE','BONHEUR','PAIX','ESPOIR','LUMIÈRE',
+    'TEMPS','HISTOIRE','MÉMOIRE','RÊVE','VOYAGE','AVENTURE','NATURE','LIBERTÉ','SILENCE','PAROLE',
+    'ARBRE','PIERRE','EAU','FEU','TERRE','AIR','MER','OCÉAN','LAC','SOURCE',
+    'MATIN','SOIR','NUIT','JOUR','SAISON','PRINTEMPS','ÉTÉ','AUTOMNE','HIVER','ANNÉE',
+    'FAMILLE','PÈRE','MÈRE','ENFANT','FRÈRE','SŒUR','AMI','VOISIN','HOMME','FEMME',
+    'TRAVAIL','ÉCOLE','BUREAU','ATELIER','USINE','MAGASIN','MARCHÉ','RESTAURANT','CAFÉ','HÔTEL',
+    'VOITURE','TRAIN','AVION','VÉLO','MOTO','CAMION','BUS','MÉTRO','TAXI','TRAM',
+    'CHAT','CHIEN','CHEVAL','VACHE','MOUTON','POULE','COCHON','LAPIN','SOURIS','CANARD'
+]);
+
+// ===== ACHIEVEMENTS =====
+const achievements = [
+    { id: 'first', icon: '🎯', name: 'Premier mot', desc: 'Trouve ton premier mot', requirement: 1 },
+    { id: 'streak5', icon: '🔥', name: 'En feu', desc: '5 mots d\'affilée', requirement: 5 },
+    { id: 'streak10', icon: '⚡', name: 'Éclair', desc: '10 mots d\'affilée', requirement: 10 },
+    { id: 'streak20', icon: '🌟', name: 'Étoile', desc: '20 mots d\'affilée', requirement: 20 },
+    { id: 'score50', icon: '🏅', name: 'Bronze', desc: 'Score de 50', requirement: 50 },
+    { id: 'score100', icon: '🥈', name: 'Argent', desc: 'Score de 100', requirement: 100 },
+    { id: 'score200', icon: '🥇', name: 'Or', desc: 'Score de 200', requirement: 200 },
+    { id: 'master', icon: '👑', name: 'Maître', desc: 'Score de 500', requirement: 500 }
+];
+
+// ===== UTILITY FUNCTIONS =====
+function generateCode() {
+    return Math.floor(100000 + Math.random() * 900000).toString();
+}
+
+function getRandomSyllable(length = 2) {
+    const sylls = length === 2 ? syllables2 : syllables3;
+    return sylls[Math.floor(Math.random() * sylls.length)];
+}
+
+function validateWord(word, syllable, position, usedWords) {
+    word = word.toUpperCase().trim();
+    
+    if (word.length < 3) return { valid: false, error: 'Mot trop court (min 3 lettres)' };
+    if (usedWords.includes(word)) return { valid: false, error: 'Mot déjà utilisé' };
+    
+    const normalizedWord = word.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    const normalizedSyllable = syllable.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    
+    if (position === 'START') {
+        if (!normalizedWord.startsWith(normalizedSyllable)) {
+            return { valid: false, error: 'Le mot doit commencer par la syllabe' };
         }
-    },
+    } else if (position === 'END') {
+        if (!normalizedWord.endsWith(normalizedSyllable)) {
+            return { valid: false, error: 'Le mot doit finir par la syllabe' };
+        }
+    } else {
+        if (!normalizedWord.includes(normalizedSyllable)) {
+            return { valid: false, error: 'Le mot doit contenir la syllabe' };
+        }
+    }
     
-    loadFallback() {
-        const words = ['MAISON', 'VOITURE', 'CHAT', 'CHIEN', 'TABLE', 'ORDINATEUR', 'TELEPHONE', 'FENETRE', 'PORTE', 'SOLEIL', 'LUNE', 'ETOILE', 'ARBRE', 'FLEUR', 'RIVIERE', 'MONTAGNE', 'PLAGE', 'VILLE', 'BONJOUR', 'BONSOIR', 'MERCI', 'PARDON'];
-        words.forEach(w => this.state.dict.add(w));
-    },
+    return { valid: true };
+}
+
+function showNotification(title, message, type = 'info') {
+    const notification = document.createElement('div');
+    notification.className = `notification ${type}`;
     
-    initPeer() {
-        const id = 'ttb-' + Math.random().toString(36).substr(2, 12);
-        this.state.peer = new Peer(id, {
+    const icons = {
+        success: '✓',
+        error: '✗',
+        info: 'ℹ'
+    };
+    
+    notification.innerHTML = `
+        <div class="notification-icon">${icons[type]}</div>
+        <div class="notification-content">
+            <div class="notification-title">${title}</div>
+            <div class="notification-message">${message}</div>
+        </div>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.style.animation = 'slideInRight 0.3s reverse';
+        setTimeout(() => notification.remove(), 300);
+    }, 3000);
+}
+
+function showScreen(screenId) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(screenId).classList.add('active');
+}
+
+function calculatePlayerPosition(index, total, centerX, centerY, radius) {
+    // Always position current player at bottom center
+    const myIndex = GameState.game.players.findIndex(p => p.id === GameState.peerId);
+    const adjustedIndex = (index - myIndex + total) % total;
+    
+    const angle = (adjustedIndex * 2 * Math.PI / total) - Math.PI / 2;
+    const x = centerX + radius * Math.cos(angle);
+    const y = centerY + radius * Math.sin(angle);
+    
+    return { x, y };
+}
+
+// ===== EMOJI PICKER =====
+function initEmojiPicker() {
+    const emojiCategories = {
+        'Visages': ['😀','😁','😂','🤣','😃','😄','😅','😆','😉','😊','😋','😎','😍','😘','🥰','😗','😙','😚','☺️','🙂','🤗','🤩','🤔','🤨','😐','😑','😶','🙄','😏','😣','😥','😮','🤐','😯','😪','😫','😴','😌','😛','😜','😝'],
+        'Animaux': ['🐶','🐱','🐭','🐹','🐰','🦊','🐻','🐼','🐨','🐯','🦁','🐮','🐷','🐸','🐵','🐔','🐧','🐦','🐤','🦆','🦅','🦉','🦇','🐺','🐗','🐴','🦄','🐝','🐛','🦋','🐌','🐞','🐜','🦟','🦗'],
+        'Objets': ['⚽','🏀','🏈','⚾','🎾','🏐','🏉','🎱','🏓','🏸','🥅','🏒','🏑','🥍','🏏','⛳','🏹','🎣','🥊','🥋','🎽','⛸️','🥌','🎿','⛷️','🏂','🪂','🏋️','🤺','🤸','⛹️','🤾','🏌️','🏇','🧘','🏄','🏊'],
+        'Nourriture': ['🍏','🍎','🍐','🍊','🍋','🍌','🍉','🍇','🍓','🫐','🍈','🍒','🍑','🥭','🍍','🥥','🥝','🍅','🍆','🥑','🥦','🥬','🥒','🌶️','🫑','🌽','🥕','🫒','🧄','🧅','🥔','🍠','🥐','🥯','🍞','🥖','🥨','🧀']
+    };
+    
+    const picker = document.getElementById('emojiPicker');
+    picker.innerHTML = '';
+    
+    Object.entries(emojiCategories).forEach(([category, emojis]) => {
+        const categoryDiv = document.createElement('div');
+        categoryDiv.className = 'emoji-category';
+        
+        const title = document.createElement('div');
+        title.className = 'emoji-category-title';
+        title.textContent = category;
+        categoryDiv.appendChild(title);
+        
+        const grid = document.createElement('div');
+        grid.className = 'emoji-grid';
+        
+        emojis.forEach(emoji => {
+            const option = document.createElement('div');
+            option.className = 'emoji-option';
+            option.textContent = emoji;
+            option.onclick = () => {
+                GameState.emoji = emoji;
+                document.getElementById('emojiBtn').textContent = emoji;
+                picker.classList.remove('active');
+            };
+            grid.appendChild(option);
+        });
+        
+        categoryDiv.appendChild(grid);
+        picker.appendChild(categoryDiv);
+    });
+}
+
+// ===== THEME =====
+function initTheme() {
+    const savedTheme = localStorage.getItem('theme') || 'dark';
+    GameState.theme = savedTheme;
+    applyTheme(savedTheme);
+}
+
+function applyTheme(theme) {
+    document.body.setAttribute('data-theme', theme);
+    document.getElementById('themeIcon').textContent = theme === 'dark' ? '🌙' : '☀️';
+    localStorage.setItem('theme', theme);
+}
+
+function toggleTheme() {
+    GameState.theme = GameState.theme === 'dark' ? 'light' : 'dark';
+    applyTheme(GameState.theme);
+}
+
+// ===== PEER CONNECTION =====
+function initPeer() {
+    return new Promise((resolve, reject) => {
+        document.getElementById('connectionStatus').classList.remove('hidden');
+        
+        GameState.peer = new Peer({
             config: {
                 iceServers: [
                     { urls: 'stun:stun.l.google.com:19302' },
-                    { urls: 'stun:stun1.l.google.com:19302' }
+                    { urls: 'stun:global.stun.twilio.com:3478' }
                 ]
-            },
-            debug: 0
-        });
-        
-        this.state.peer.on('open', (id) => {
-            this.state.id = id;
-            console.log('Connected:', id);
-        });
-        
-        this.state.peer.on('connection', (conn) => {
-            if (this.state.host) this.handleConn(conn);
-        });
-        
-        this.state.peer.on('error', (e) => {
-            console.error('Peer error:', e);
-            this.notif('Erreur de connexion', e.message, 'error');
-        });
-    },
-    
-    showCreate() {
-        if (!this.check()) return;
-        
-        this.state.code = this.genCode();
-        this.state.host = true;
-        
-        this.state.game = {
-            code: this.state.code,
-            hostId: this.state.id,
-            state: 'CONFIG',
-            config: { lives: 3, timer: 15, diff: 'medium' },
-            players: [{
-                id: this.state.id,
-                name: this.state.user,
-                lives: 3,
-                out: false,
-                host: true
-            }],
-            turn: 0,
-            syl: '',
-            timer: 0,
-            maxTimer: 15,
-            words: [],
-            conns: new Map()
-        };
-        
-        document.getElementById('config-code').textContent = this.state.code;
-        this.updateConfigPlayers();
-        this.show('config');
-    },
-    
-    genCode() {
-        const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-        let code = '';
-        for (let i = 0; i < 4; i++) {
-            code += chars.charAt(Math.floor(Math.random() * chars.length));
-        }
-        return code;
-    },
-    
-    updateRange(type) {
-        const val = document.getElementById(type).value;
-        document.getElementById(type + '-val').textContent = val;
-        if (this.state.game) {
-            if (type === 'lives') this.state.game.config.lives = parseInt(val);
-            if (type === 'timer') this.state.game.config.timer = parseInt(val);
-        }
-    },
-    
-    copyCode() {
-        navigator.clipboard.writeText(this.state.code)
-            .then(() => this.notif('Copié !', 'Code copié', 'success'))
-            .catch(() => this.notif('Erreur', 'Impossible de copier', 'error'));
-    },
-    
-    updateConfigPlayers() {
-        const cont = document.getElementById('config-players');
-        const count = document.getElementById('config-count');
-        
-        if (!this.state.game) return;
-        
-        count.textContent = this.state.game.players.length;
-        cont.innerHTML = '';
-        
-        this.state.game.players.forEach(p => {
-            const div = document.createElement('div');
-            div.style = 'display: flex; align-items: center; gap: 8px; padding: 8px; background: var(--bg-elevated); border-radius: 8px; margin-bottom: 8px;';
-            div.innerHTML = `
-                <span style="font-size: 18px;">👤</span>
-                <span style="flex: 1; font-weight: 600;">${p.name}</span>
-                ${p.host ? '<span class="badge">Hôte</span>' : ''}
-            `;
-            cont.appendChild(div);
-        });
-        
-        document.getElementById('start-btn').disabled = this.state.game.players.length < 2;
-    },
-    
-    cancel() {
-        if (confirm('Annuler la création ?')) {
-            if (this.state.game) {
-                this.state.game.conns.forEach(c => c.close());
-                this.state.game = null;
             }
-            this.state.host = false;
-            this.state.code = '';
-            this.show('home');
-        }
-    },
-    
-    showJoin() {
-        if (!this.check()) return;
-        document.getElementById('join-modal').classList.add('active');
-        document.getElementById('join-code').focus();
-    },
-    
-    closeJoin() {
-        document.getElementById('join-modal').classList.remove('active');
-        document.getElementById('join-code').value = '';
-    },
-    
-    join() {
-        const code = document.getElementById('join-code').value.trim().toUpperCase();
+        });
         
-        if (code.length !== 4) {
-            this.notif('Code invalide', '4 caractères requis', 'error');
-            return;
-        }
+        GameState.peer.on('open', (id) => {
+            GameState.peerId = id;
+            console.log('Peer ID:', id);
+            document.getElementById('connectionStatus').classList.add('hidden');
+            resolve(id);
+        });
         
-        this.state.code = code;
-        this.state.host = false;
+        GameState.peer.on('error', (error) => {
+            console.error('Peer error:', error);
+            document.getElementById('connectionStatus').classList.add('hidden');
+            showNotification('Erreur de connexion', error.message, 'error');
+            reject(error);
+        });
         
-        const hostId = 'ttb-room-' + code.toLowerCase();
-        const conn = this.state.peer.connect(hostId);
-        
-        conn.on('open', () => {
-            this.state.conn = conn;
-            conn.send({
-                type: 'JOIN',
-                id: this.state.id,
-                name: this.state.user
+        GameState.peer.on('connection', (conn) => {
+            if (!GameState.isHost) return;
+            
+            setupConnection(conn);
+            
+            conn.on('open', () => {
+                console.log('New player connected:', conn.peer);
             });
-            
-            this.closeJoin();
-            this.show('lobby');
-            this.notif('Connecté !', 'Vous avez rejoint', 'success');
         });
-        
-        conn.on('data', (d) => this.handleClient(d));
-        conn.on('close', () => {
-            this.notif('Déconnecté', 'Connexion perdue', 'error');
-            this.home();
-        });
-        
-        conn.on('error', (e) => {
-            console.error('Conn error:', e);
-            this.notif('Erreur', 'Impossible de rejoindre', 'error');
-            this.closeJoin();
-        });
-    },
+    });
+}
+
+function setupConnection(conn) {
+    conn.on('data', (data) => {
+        handleMessage(data, conn);
+    });
     
-    leave() {
-        if (confirm('Quitter ?')) {
-            if (this.state.conn) {
-                this.state.conn.send({ type: 'LEAVE', id: this.state.id });
-                this.state.conn.close();
-                this.state.conn = null;
-            }
-            this.home();
-        }
-    },
-    
-    handleConn(conn) {
-        conn.on('data', (d) => this.handleHost(d, conn));
-        conn.on('close', () => this.disconnect(conn.peer));
-    },
-    
-    handleHost(d, conn) {
-        if (d.type === 'JOIN') {
-            if (this.state.game.state !== 'CONFIG') {
-                conn.send({ type: 'ERROR', msg: 'Partie commencée' });
-                conn.close();
-                return;
-            }
-            
-            if (this.state.game.players.length >= 30) {
-                conn.send({ type: 'ERROR', msg: 'Complet' });
-                conn.close();
-                return;
-            }
-            
-            this.state.game.players.push({
-                id: d.id,
-                name: d.name,
-                lives: this.state.game.config.lives,
-                out: false,
-                host: false
-            });
-            
-            this.state.game.conns.set(d.id, conn);
-            this.notif('Nouveau joueur', d.name + ' a rejoint', 'info');
-            
-            conn.send({
-                type: 'SYNC',
-                state: this.serialize()
-            });
-            
-            this.updateConfigPlayers();
-            this.broadcast();
-        }
-        
-        if (d.type === 'WORD') {
-            const current = this.state.game.players[this.state.game.turn];
-            if (current && current.id === d.id) {
-                this.validate(d.word);
+    conn.on('close', () => {
+        if (GameState.isHost) {
+            const playerIndex = GameState.game.players.findIndex(p => p.id === conn.peer);
+            if (playerIndex !== -1) {
+                const player = GameState.game.players[playerIndex];
+                GameState.game.players.splice(playerIndex, 1);
+                GameState.connections = GameState.connections.filter(c => c.peer !== conn.peer);
+                
+                addChatMessage('system', `${player.name} a quitté la partie`);
+                broadcast({ type: 'SYNC', game: serializeGame() });
+                updateLobby();
             }
         }
-        
-        if (d.type === 'LEAVE') {
-            conn.close();
-        }
-    },
+    });
     
-    disconnect(id) {
-        if (!this.state.game) return;
-        
-        const idx = this.state.game.players.findIndex(p => p.id === id);
-        if (idx !== -1) {
-            const name = this.state.game.players[idx].name;
-            this.state.game.players.splice(idx, 1);
-            this.state.game.conns.delete(id);
-            
-            this.notif('Joueur parti', name, 'info');
-            this.updateConfigPlayers();
-            this.broadcast();
-        }
-    },
+    if (GameState.isHost) {
+        GameState.connections.push(conn);
+    } else {
+        GameState.connection = conn;
+    }
+}
+
+function broadcast(data) {
+    if (!GameState.isHost) return;
     
-    handleClient(d) {
-        if (d.type === 'SYNC') {
-            this.state.game = d.state;
-            
-            if (d.state.state === 'PLAYING' && this.state.screen !== 'game') {
-                this.show('game');
-            }
-            
-            if (this.state.screen === 'lobby') {
-                this.renderLobby();
-            } else if (this.state.screen === 'game') {
-                this.renderGame();
-            }
+    GameState.connections.forEach(conn => {
+        try {
+            conn.send(data);
+        } catch (error) {
+            console.error('Error broadcasting to', conn.peer, error);
         }
-        
-        if (d.type === 'ERROR') {
-            this.notif('Erreur', d.msg, 'error');
-        }
-    },
+    });
+}
+
+function handleMessage(data, conn) {
+    console.log('Received message:', data);
     
-    start() {
-        if (!this.state.host || !this.state.game) return;
-        if (this.state.game.players.length < 2) {
-            this.notif('Erreur', 'Min. 2 joueurs', 'error');
-            return;
-        }
-        
-        const diffs = document.getElementsByName('diff');
-        for (let d of diffs) {
-            if (d.checked) {
-                this.state.game.config.diff = d.value;
-                break;
-            }
-        }
-        
-        this.state.game.players.forEach(p => {
-            p.lives = this.state.game.config.lives;
-            p.out = false;
-        });
-        
-        this.state.game.state = 'PLAYING';
-        this.state.game.maxTimer = this.state.game.config.timer;
-        
-        this.newRound();
-        this.show('game');
-        this.renderGame();
-        this.broadcast();
-        this.notif('Partie lancée !', 'Bonne chance !', 'success');
-    },
-    
-    newRound() {
-        if (!this.state.game) return;
-        
-        const list = this.syl[this.state.game.config.diff] || this.syl.medium;
-        this.state.game.syl = list[Math.floor(Math.random() * list.length)];
-        this.state.game.timer = this.state.game.maxTimer;
-        
-        if (this.state.game.interval) {
-            clearInterval(this.state.game.interval);
-        }
-        
-        this.state.game.interval = setInterval(() => {
-            this.state.game.timer -= 0.1;
-            
-            if (this.state.game.timer <= 0) {
-                this.explode();
-            } else {
-                if (Math.floor(this.state.game.timer * 10) % 5 === 0) {
-                    this.broadcast();
+    switch (data.type) {
+        case 'JOIN':
+            if (GameState.isHost) {
+                if (GameState.game.players.length >= 30) {
+                    conn.send({ type: 'ERROR', message: 'Partie complète (30 joueurs max)' });
+                    conn.close();
+                    return;
                 }
+                
+                if (GameState.game.state !== 'WAITING') {
+                    conn.send({ type: 'ERROR', message: 'Partie déjà commencée' });
+                    conn.close();
+                    return;
+                }
+                
+                const player = {
+                    id: conn.peer,
+                    name: data.username,
+                    emoji: data.emoji,
+                    color: data.color,
+                    lives: GameState.game.config.lives,
+                    isHost: false,
+                    out: false
+                };
+                
+                GameState.game.players.push(player);
+                
+                conn.send({ type: 'JOINED', game: serializeGame() });
+                
+                addChatMessage('system', `${player.name} a rejoint la partie`);
+                broadcast({ type: 'SYNC', game: serializeGame() });
+                updateLobby();
             }
+            break;
             
-            if (this.state.screen === 'game') {
-                this.updateTimer();
+        case 'JOINED':
+            GameState.game = deserializeGame(data.game);
+            showScreen('lobby');
+            updateLobby();
+            break;
+            
+        case 'SYNC':
+            GameState.game = deserializeGame(data.game);
+            if (document.getElementById('lobby').classList.contains('active')) {
+                updateLobby();
+            } else if (document.getElementById('game').classList.contains('active')) {
+                updateGame();
             }
-        }, 100);
-        
-        this.broadcast();
-    },
-    
-    explode() {
-        if (!this.state.game) return;
-        
-        clearInterval(this.state.game.interval);
-        this.state.game.interval = null;
-        
-        const curr = this.state.game.players[this.state.game.turn];
-        curr.lives -= 1;
-        
-        this.notif('💥 BOOM !', curr.name + ' perd une vie', 'error');
-        
-        if (curr.lives <= 0) {
-            curr.out = true;
-            this.notif('☠️ Éliminé', curr.name, 'error');
-        }
-        
-        const alive = this.state.game.players.filter(p => !p.out);
-        if (alive.length === 1) {
-            this.end(alive[0]);
-            return;
-        }
-        
-        this.nextTurn();
-        this.broadcast();
-        
-        setTimeout(() => {
-            this.newRound();
-        }, 2000);
-    },
-    
-    nextTurn() {
-        if (!this.state.game) return;
-        
-        let tries = 0;
-        do {
-            this.state.game.turn = (this.state.game.turn + 1) % this.state.game.players.length;
-            tries++;
-        } while (
-            this.state.game.players[this.state.game.turn].out &&
-            tries < this.state.game.players.length
-        );
-    },
-    
-    validate(word) {
-        if (!this.state.game) return;
-        
-        word = word.trim().toUpperCase();
-        const norm = word.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-        const sylNorm = this.state.game.syl.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-        
-        if (!norm.includes(sylNorm)) {
-            this.notif('❌ Invalide', 'Syllabe absente', 'error');
-            return;
-        }
-        
-        if (this.state.game.words.includes(word)) {
-            this.notif('❌ Déjà utilisé', '', 'error');
-            return;
-        }
-        
-        if (this.state.dict.size > 0 && !this.state.dict.has(word)) {
-            const unaccent = word.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-            if (!this.state.dict.has(unaccent)) {
-                this.notif('❌ Introuvable', 'Pas dans le dico', 'error');
-                return;
+            break;
+            
+        case 'START':
+            GameState.game = deserializeGame(data.game);
+            showScreen('game');
+            updateGame();
+            break;
+            
+        case 'WORD':
+            if (GameState.isHost) {
+                validateAndProcessWord(data.word, data.playerId);
             }
-        }
-        
-        this.state.game.words.push(word);
-        
-        clearInterval(this.state.game.interval);
-        this.state.game.interval = null;
-        
-        this.state.game.maxTimer = Math.max(3, this.state.game.maxTimer * 0.95);
-        
-        this.notif('✅ Correct !', word, 'success');
-        
-        this.nextTurn();
-        this.broadcast();
-        
-        setTimeout(() => {
-            this.newRound();
-        }, 1500);
-    },
+            break;
+            
+        case 'CHAT':
+            addChatMessage(data.playerId, data.message, data.emoji, data.color);
+            break;
+            
+        case 'REACTION':
+            showReaction(data.playerId, data.reaction);
+            break;
+            
+        case 'PING':
+            if (GameState.isHost) {
+                conn.send({ type: 'PONG', timestamp: data.timestamp });
+            }
+            break;
+            
+        case 'PONG':
+            GameState.ping = Date.now() - data.timestamp;
+            updatePing();
+            break;
+            
+        case 'ERROR':
+            showNotification('Erreur', data.message, 'error');
+            break;
+    }
+}
+
+// ===== GAME LOGIC =====
+function serializeGame() {
+    return {
+        code: GameState.game.code,
+        players: GameState.game.players,
+        config: GameState.game.config,
+        currentPlayer: GameState.game.currentPlayer,
+        syllable: GameState.game.syllable,
+        timer: GameState.game.timer,
+        maxTimer: GameState.game.maxTimer,
+        usedWords: GameState.game.usedWords,
+        state: GameState.game.state,
+        winner: GameState.game.winner
+    };
+}
+
+function deserializeGame(data) {
+    return {
+        code: data.code,
+        players: data.players,
+        config: data.config,
+        currentPlayer: data.currentPlayer,
+        syllable: data.syllable,
+        timer: data.timer,
+        maxTimer: data.maxTimer,
+        usedWords: data.usedWords,
+        state: data.state,
+        winner: data.winner,
+        interval: null
+    };
+}
+
+async function createGame(config) {
+    if (!GameState.username || GameState.username.length < 2) {
+        showNotification('Pseudo requis', 'Min. 2 caractères', 'error');
+        return;
+    }
     
-    end(winner) {
-        if (!this.state.game) return;
-        
-        this.state.game.state = 'ENDED';
-        this.state.game.winner = winner;
-        
-        if (this.state.game.interval) {
-            clearInterval(this.state.game.interval);
-            this.state.game.interval = null;
-        }
-        
-        this.broadcast();
-        this.showVictory(winner);
-        
-        confetti({
-            particleCount: 150,
-            spread: 70,
-            origin: { y: 0.6 }
+    if (!GameState.peer) {
+        await initPeer();
+    }
+    
+    GameState.isHost = true;
+    GameState.gameCode = generateCode();
+    
+    GameState.game = {
+        code: GameState.gameCode,
+        players: [{
+            id: GameState.peerId,
+            name: GameState.username,
+            emoji: GameState.emoji,
+            color: GameState.color,
+            lives: config.lives,
+            isHost: true,
+            out: false
+        }],
+        config: config,
+        currentPlayer: 0,
+        syllable: '',
+        timer: 0,
+        maxTimer: config.initialTime,
+        usedWords: [],
+        state: 'WAITING',
+        winner: null,
+        interval: null
+    };
+    
+    showScreen('lobby');
+    updateLobby();
+    startPingInterval();
+}
+
+async function joinGame(code) {
+    if (!GameState.username || GameState.username.length < 2) {
+        showNotification('Pseudo requis', 'Min. 2 caractères', 'error');
+        return;
+    }
+    
+    if (!code || code.length !== 6) {
+        showNotification('Code invalide', 'Le code doit contenir 6 chiffres', 'error');
+        return;
+    }
+    
+    if (!GameState.peer) {
+        await initPeer();
+    }
+    
+    const hostPeerId = `game-${code}`;
+    const conn = GameState.peer.connect(hostPeerId);
+    
+    setupConnection(conn);
+    
+    conn.on('open', () => {
+        conn.send({
+            type: 'JOIN',
+            username: GameState.username,
+            emoji: GameState.emoji,
+            color: GameState.color
         });
-    },
+        startPingInterval();
+    });
     
-    submit() {
-        const input = document.getElementById('word');
-        const word = input.value.trim().toUpperCase();
+    conn.on('error', (error) => {
+        showNotification('Erreur', 'Impossible de rejoindre la partie', 'error');
+        console.error('Connection error:', error);
+    });
+}
+
+function startGame() {
+    if (!GameState.isHost) return;
+    if (GameState.game.players.length < 1) {
+        showNotification('Pas assez de joueurs', 'Min. 1 joueur requis', 'error');
+        return;
+    }
+    
+    GameState.game.state = 'PLAYING';
+    GameState.game.currentPlayer = 0;
+    newRound();
+    
+    broadcast({ type: 'START', game: serializeGame() });
+    showScreen('game');
+    updateGame();
+}
+
+function newRound() {
+    if (!GameState.isHost) return;
+    
+    GameState.game.syllable = getRandomSyllable(GameState.game.config.syllableLength);
+    GameState.game.timer = GameState.game.maxTimer;
+    
+    if (GameState.game.interval) {
+        clearInterval(GameState.game.interval);
+    }
+    
+    GameState.game.interval = setInterval(() => {
+        GameState.game.timer -= 0.1;
         
-        if (!word) return;
+        if (GameState.game.timer <= 0) {
+            playerLoseLife();
+        }
         
-        if (this.state.host) {
-            this.validate(word);
-        } else if (this.state.conn) {
-            this.state.conn.send({
-                type: 'WORD',
-                id: this.state.id,
-                word: word
+        broadcast({ type: 'SYNC', game: serializeGame() });
+        updateGame();
+    }, 100);
+    
+    broadcast({ type: 'SYNC', game: serializeGame() });
+    updateGame();
+}
+
+function validateAndProcessWord(word, playerId) {
+    if (!GameState.isHost) return;
+    
+    const currentPlayer = GameState.game.players[GameState.game.currentPlayer];
+    if (currentPlayer.id !== playerId) {
+        return;
+    }
+    
+    const validation = validateWord(
+        word,
+        GameState.game.syllable,
+        GameState.game.config.position,
+        GameState.game.usedWords
+    );
+    
+    if (!validation.valid) {
+        broadcast({
+            type: 'CHAT',
+            playerId: 'system',
+            message: validation.error
+        });
+        return;
+    }
+    
+    if (GameState.game.config.strict && !frenchWords.has(word.toUpperCase())) {
+        broadcast({
+            type: 'CHAT',
+            playerId: 'system',
+            message: 'Mot non trouvé dans le dictionnaire'
+        });
+        return;
+    }
+    
+    GameState.game.usedWords.push(word.toUpperCase());
+    
+    if (GameState.game.interval) {
+        clearInterval(GameState.game.interval);
+        GameState.game.interval = null;
+    }
+    
+    GameState.game.maxTimer = Math.max(3, GameState.game.maxTimer * 0.95);
+    
+    confetti({
+        particleCount: 30,
+        spread: 60,
+        origin: { y: 0.7 }
+    });
+    
+    broadcast({
+        type: 'CHAT',
+        playerId: 'system',
+        message: `✅ ${currentPlayer.name} : ${word.toUpperCase()}`
+    });
+    
+    nextPlayer();
+    
+    setTimeout(() => {
+        newRound();
+    }, 1500);
+}
+
+function playerLoseLife() {
+    if (!GameState.isHost) return;
+    
+    const currentPlayer = GameState.game.players[GameState.game.currentPlayer];
+    currentPlayer.lives--;
+    
+    if (currentPlayer.lives <= 0) {
+        currentPlayer.out = true;
+        
+        broadcast({
+            type: 'CHAT',
+            playerId: 'system',
+            message: `💥 ${currentPlayer.name} est éliminé !`
+        });
+    }
+    
+    const activePlayers = GameState.game.players.filter(p => !p.out);
+    
+    if (activePlayers.length === 1) {
+        endGame(activePlayers[0]);
+        return;
+    }
+    
+    if (activePlayers.length === 0) {
+        endGame(null);
+        return;
+    }
+    
+    if (GameState.game.interval) {
+        clearInterval(GameState.game.interval);
+        GameState.game.interval = null;
+    }
+    
+    nextPlayer();
+    
+    setTimeout(() => {
+        newRound();
+    }, 1500);
+}
+
+function nextPlayer() {
+    if (!GameState.isHost) return;
+    
+    let nextIndex = (GameState.game.currentPlayer + 1) % GameState.game.players.length;
+    let attempts = 0;
+    
+    while (GameState.game.players[nextIndex].out && attempts < GameState.game.players.length) {
+        nextIndex = (nextIndex + 1) % GameState.game.players.length;
+        attempts++;
+    }
+    
+    GameState.game.currentPlayer = nextIndex;
+    broadcast({ type: 'SYNC', game: serializeGame() });
+}
+
+function endGame(winner) {
+    if (!GameState.isHost) return;
+    
+    GameState.game.state = 'ENDED';
+    GameState.game.winner = winner;
+    
+    if (GameState.game.interval) {
+        clearInterval(GameState.game.interval);
+        GameState.game.interval = null;
+    }
+    
+    broadcast({ type: 'SYNC', game: serializeGame() });
+    
+    if (winner) {
+        document.getElementById('victoryWinner').textContent = `${winner.emoji} ${winner.name}`;
+    } else {
+        document.getElementById('victoryWinner').textContent = 'Match nul !';
+    }
+    
+    document.getElementById('victoryOverlay').classList.add('active');
+    
+    confetti({
+        particleCount: 150,
+        spread: 100,
+        origin: { y: 0.6 }
+    });
+}
+
+// ===== SOLO MODE =====
+function startSoloMode() {
+    if (!GameState.username || GameState.username.length < 2) {
+        showNotification('Pseudo requis', 'Min. 2 caractères', 'error');
+        return;
+    }
+    
+    GameState.solo = {
+        score: 0,
+        streak: 0,
+        bestStreak: 0,
+        syllable: '',
+        timer: 0,
+        maxTimer: 15,
+        usedWords: [],
+        interval: null,
+        achievements: []
+    };
+    
+    showScreen('solo');
+    renderAchievements();
+    newSoloRound();
+}
+
+function newSoloRound() {
+    GameState.solo.syllable = getRandomSyllable(2);
+    GameState.solo.timer = GameState.solo.maxTimer;
+    
+    document.getElementById('soloSyllable').textContent = GameState.solo.syllable;
+    document.getElementById('soloWordInput').value = '';
+    document.getElementById('soloWordInput').focus();
+    
+    if (GameState.solo.interval) {
+        clearInterval(GameState.solo.interval);
+    }
+    
+    GameState.solo.interval = setInterval(() => {
+        GameState.solo.timer -= 0.1;
+        updateSoloTimer();
+        
+        if (GameState.solo.timer <= 0) {
+            soloGameOver();
+        }
+    }, 100);
+    
+    updateSoloTimer();
+}
+
+function submitSoloWord() {
+    const input = document.getElementById('soloWordInput');
+    const word = input.value.trim().toUpperCase();
+    
+    if (!word) return;
+    
+    const validation = validateWord(word, GameState.solo.syllable, 'ANY', GameState.solo.usedWords);
+    
+    if (!validation.valid) {
+        showNotification('Erreur', validation.error, 'error');
+        GameState.solo.streak = 0;
+        updateSoloStreak();
+        return;
+    }
+    
+    GameState.solo.usedWords.push(word);
+    GameState.solo.score++;
+    GameState.solo.streak++;
+    
+    if (GameState.solo.streak > GameState.solo.bestStreak) {
+        GameState.solo.bestStreak = GameState.solo.streak;
+    }
+    
+    GameState.solo.maxTimer = Math.max(3, GameState.solo.maxTimer * 0.97);
+    
+    updateSoloScore();
+    updateSoloStreak();
+    checkAchievements();
+    
+    confetti({
+        particleCount: 20,
+        spread: 50,
+        origin: { y: 0.6 }
+    });
+    
+    if (GameState.solo.interval) {
+        clearInterval(GameState.solo.interval);
+    }
+    
+    setTimeout(() => {
+        newSoloRound();
+    }, 500);
+}
+
+function soloGameOver() {
+    if (GameState.solo.interval) {
+        clearInterval(GameState.solo.interval);
+        GameState.solo.interval = null;
+    }
+    
+    showNotification('Temps écoulé !', `Score final : ${GameState.solo.score}`, 'info');
+    GameState.solo.streak = 0;
+    updateSoloStreak();
+}
+
+function updateSoloScore() {
+    document.getElementById('soloScore').textContent = GameState.solo.score;
+}
+
+function updateSoloStreak() {
+    const streakFire = document.querySelector('#soloStreak .streak-fire');
+    const streakText = document.getElementById('streakText');
+    
+    if (GameState.solo.streak >= 5) {
+        streakFire.classList.remove('hidden');
+        streakText.textContent = `${GameState.solo.streak} mots d'affilée !`;
+    } else if (GameState.solo.streak > 0) {
+        streakFire.classList.add('hidden');
+        streakText.textContent = `${GameState.solo.streak} mot${GameState.solo.streak > 1 ? 's' : ''}`;
+    } else {
+        streakFire.classList.add('hidden');
+        streakText.textContent = 'Nouvelle série !';
+    }
+}
+
+function updateSoloTimer() {
+    const percent = (GameState.solo.timer / GameState.solo.maxTimer) * 100;
+    document.getElementById('soloTimerFill').style.width = percent + '%';
+    document.getElementById('soloTimerText').textContent = GameState.solo.timer.toFixed(1) + 's';
+}
+
+function renderAchievements() {
+    const grid = document.getElementById('achievementsGrid');
+    grid.innerHTML = '';
+    
+    achievements.forEach(achievement => {
+        const div = document.createElement('div');
+        div.className = 'achievement';
+        
+        const isUnlocked = GameState.solo.achievements.includes(achievement.id);
+        if (isUnlocked) {
+            div.classList.add('unlocked');
+        }
+        
+        div.innerHTML = `
+            <div class="achievement-icon">${achievement.icon}</div>
+            <div class="achievement-name">${achievement.name}</div>
+            <div class="achievement-desc">${achievement.desc}</div>
+        `;
+        
+        grid.appendChild(div);
+    });
+}
+
+function checkAchievements() {
+    achievements.forEach(achievement => {
+        if (GameState.solo.achievements.includes(achievement.id)) return;
+        
+        let unlock = false;
+        
+        if (achievement.id === 'first' && GameState.solo.score >= 1) unlock = true;
+        if (achievement.id === 'streak5' && GameState.solo.streak >= 5) unlock = true;
+        if (achievement.id === 'streak10' && GameState.solo.streak >= 10) unlock = true;
+        if (achievement.id === 'streak20' && GameState.solo.streak >= 20) unlock = true;
+        if (achievement.id === 'score50' && GameState.solo.score >= 50) unlock = true;
+        if (achievement.id === 'score100' && GameState.solo.score >= 100) unlock = true;
+        if (achievement.id === 'score200' && GameState.solo.score >= 200) unlock = true;
+        if (achievement.id === 'master' && GameState.solo.score >= 500) unlock = true;
+        
+        if (unlock) {
+            GameState.solo.achievements.push(achievement.id);
+            showNotification('Succès débloqué !', `${achievement.icon} ${achievement.name}`, 'success');
+            confetti({
+                particleCount: 100,
+                spread: 70,
+                origin: { y: 0.6 }
             });
+            renderAchievements();
+        }
+    });
+}
+
+// ===== UI UPDATES =====
+function updateLobby() {
+    document.getElementById('lobbyCode').textContent = GameState.game.code;
+    document.getElementById('playersCount').textContent = `${GameState.game.players.length}/30`;
+    
+    const grid = document.getElementById('playersGrid');
+    grid.innerHTML = '';
+    
+    GameState.game.players.forEach(player => {
+        const div = document.createElement('div');
+        div.className = 'player-card';
+        if (player.id === GameState.peerId) {
+            div.classList.add('me');
         }
         
-        input.value = '';
-    },
-    
-    renderLobby() {
-        if (!this.state.game) return;
-        
-        document.getElementById('lobby-code').textContent = this.state.game.code;
-        document.getElementById('lobby-count').textContent = this.state.game.players.length;
-        
-        const cont = document.getElementById('lobby-players');
-        cont.innerHTML = '';
-        
-        this.state.game.players.forEach(p => {
-            const div = document.createElement('div');
-            div.className = 'player' + (p.host ? ' host' : '');
-            div.innerHTML = `
-                <div class="player-avatar">👤</div>
-                <div class="player-name">${p.name}</div>
-                ${p.host ? '<span class="badge">Hôte</span>' : ''}
-            `;
-            cont.appendChild(div);
-        });
-    },
-    
-    renderGame() {
-        if (!this.state.game) return;
-        
-        document.getElementById('game-code').textContent = this.state.game.code;
-        document.getElementById('game-count').textContent = this.state.game.players.filter(p => !p.out).length;
-        document.getElementById('game-words').textContent = this.state.game.words.length;
-        
-        document.getElementById('syl').textContent = this.state.game.syl || '...';
-        
-        this.updateTimer();
-        
-        const players = document.getElementById('game-players');
-        players.innerHTML = '';
-        
-        this.state.game.players.forEach((p, i) => {
-            const div = document.createElement('div');
-            div.className = 'player';
-            
-            if (i === this.state.game.turn && this.state.game.state === 'PLAYING') {
-                div.classList.add('active');
-            }
-            
-            if (p.out) {
-                div.classList.add('out');
-            }
-            
-            const hearts = '❤️'.repeat(p.lives);
-            
-            div.innerHTML = `
-                ${i === this.state.game.turn && this.state.game.state === 'PLAYING' ? '<span class="arrow">👉</span>' : ''}
-                <span style="font-size: 28px;">👤</span>
-                <div style="flex: 1;">
-                    <div style="font-weight: 600; font-size: 14px; overflow: hidden; text-overflow: ellipsis;">${p.name}</div>
-                    <div style="font-size: 14px; margin-top: 4px;">${hearts}</div>
-                </div>
-            `;
-            
-            players.appendChild(div);
-        });
-        
-        const myTurn = this.state.game.players[this.state.game.turn]?.id === this.state.id &&
-                       this.state.game.state === 'PLAYING';
-        const inputArea = document.getElementById('input-area');
-        const status = document.getElementById('game-status');
-        
-        if (myTurn) {
-            inputArea.classList.remove('hide');
-            status.textContent = '';
-            document.getElementById('word').focus();
-        } else {
-            inputArea.classList.add('hide');
-            
-            if (this.state.game.state === 'ENDED') {
-                status.textContent = '🏆 Terminé !';
-            } else if (this.state.game.state === 'PLAYING') {
-                const curr = this.state.game.players[this.state.game.turn];
-                status.textContent = `Tour de ${curr.name}...`;
-            } else {
-                status.textContent = 'En attente...';
-            }
-        }
-        
-        const words = document.getElementById('used-words');
-        words.innerHTML = '';
-        
-        this.state.game.words.slice().reverse().slice(0, 20).forEach(w => {
-            const span = document.createElement('span');
-            span.className = 'word';
-            span.textContent = w;
-            words.appendChild(span);
-        });
-        
-        const bomb = document.getElementById('bomb');
-        if (this.state.game.timer < 5 && this.state.game.state === 'PLAYING') {
-            bomb.classList.add('critical');
-        } else {
-            bomb.classList.remove('critical');
-        }
-    },
-    
-    updateTimer() {
-        if (!this.state.game) return;
-        
-        const pct = (this.state.game.timer / this.state.game.maxTimer) * 100;
-        document.getElementById('timer-fill').style.width = pct + '%';
-        document.getElementById('timer-text').textContent = this.state.game.timer.toFixed(1) + 's';
-    },
-    
-    showVictory(winner) {
-        document.getElementById('winner').textContent = winner.name;
-        document.getElementById('victory').classList.add('active');
-    },
-    
-    broadcast() {
-        if (!this.state.host || !this.state.game) return;
-        
-        const msg = {
-            type: 'SYNC',
-            state: this.serialize()
-        };
-        
-        this.state.game.conns.forEach(c => {
-            try {
-                c.send(msg);
-            } catch (e) {
-                console.error('Send error:', e);
-            }
-        });
-        
-        if (this.state.screen === 'config') {
-            this.updateConfigPlayers();
-        } else if (this.state.screen === 'lobby') {
-            this.renderLobby();
-        } else if (this.state.screen === 'game') {
-            this.renderGame();
-        }
-    },
-    
-    serialize() {
-        return {
-            code: this.state.game.code,
-            hostId: this.state.game.hostId,
-            state: this.state.game.state,
-            config: this.state.game.config,
-            players: this.state.game.players,
-            turn: this.state.game.turn,
-            syl: this.state.game.syl,
-            timer: this.state.game.timer,
-            maxTimer: this.state.game.maxTimer,
-            words: this.state.game.words,
-            winner: this.state.game.winner
-        };
-    },
-    
-    check() {
-        if (!this.state.user || this.state.user.length < 2) {
-            this.notif('Pseudo requis', 'Min. 2 caractères', 'info');
-            document.getElementById('username').focus();
-            return false;
-        }
-        return true;
-    },
-    
-    notif(title, msg, type = 'info') {
-        const n = document.createElement('div');
-        n.className = 'notif ' + type;
-        
-        const icons = {
-            success: '✓',
-            error: '✗',
-            info: 'ℹ'
-        };
-        
-        n.innerHTML = `
-            <div class="notif-icon">${icons[type] || 'ℹ'}</div>
-            <div class="notif-content">
-                <div class="notif-title">${title}</div>
-                <div class="notif-msg">${msg}</div>
+        div.innerHTML = `
+            <div class="player-avatar" style="background-color: ${player.color};">
+                ${player.emoji}
+            </div>
+            <div class="player-info">
+                <div class="player-name">${player.name}</div>
+                ${player.isHost ? '<span class="player-badge">Hôte</span>' : ''}
             </div>
         `;
         
-        document.body.appendChild(n);
-        
-        setTimeout(() => {
-            n.style.animation = 'slideIn 0.3s reverse';
-            setTimeout(() => n.remove(), 300);
-        }, 3000);
-    },
+        grid.appendChild(div);
+    });
     
-    show(name) {
-        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-        document.getElementById(name).classList.add('active');
-        this.state.screen = name;
-    },
-    
-    home() {
-        if (this.state.host && this.state.game) {
-            this.state.game.conns.forEach(c => c.close());
-        }
-        
-        if (this.state.conn) {
-            this.state.conn.close();
-            this.state.conn = null;
-        }
-        
-        this.state.game = null;
-        this.state.host = false;
-        this.state.code = '';
-        
-        document.getElementById('victory').classList.remove('active');
-        this.show('home');
+    const startBtn = document.getElementById('startGameBtn');
+    if (GameState.isHost) {
+        startBtn.disabled = GameState.game.players.length < 1;
+    } else {
+        startBtn.style.display = 'none';
     }
-};
+}
 
-document.addEventListener('DOMContentLoaded', () => Game.init());
+function updateGame() {
+    document.getElementById('gameCode').textContent = GameState.game.code;
+    document.getElementById('gamePlayers').textContent = GameState.game.players.filter(p => !p.out).length;
+    document.getElementById('gameWords').textContent = GameState.game.usedWords.length;
+    document.getElementById('syllableText').textContent = GameState.game.syllable || '...';
+    
+    const percent = (GameState.game.timer / GameState.game.maxTimer) * 100;
+    document.getElementById('timerFill').style.width = percent + '%';
+    document.getElementById('timerText').textContent = GameState.game.timer.toFixed(1) + 's';
+    
+    const bomb = document.getElementById('bombIcon');
+    if (GameState.game.timer < 5) {
+        bomb.classList.add('critical');
+    } else {
+        bomb.classList.remove('critical');
+    }
+    
+    updatePlayersCircle();
+    updateUsedWords();
+    updateInputArea();
+}
 
+function updatePlayersCircle() {
+    const circle = document.getElementById('playersCircle');
+    const existingPlayers = circle.querySelectorAll('.game-player');
+    existingPlayers.forEach(p => p.remove());
+    
+    const rect = circle.getBoundingClientRect();
+    const centerX = rect.width / 2;
+    const centerY = rect.height / 2;
+    const radius = Math.min(centerX, centerY) * 0.7;
+    
+    GameState.game.players.forEach((player, index) => {
+        const pos = calculatePlayerPosition(index, GameState.game.players.length, centerX, centerY, radius);
+        
+        const div = document.createElement('div');
+        div.className = 'game-player';
+        if (index === GameState.game.currentPlayer && GameState.game.state === 'PLAYING') {
+            div.classList.add('active');
+        }
+        if (player.id === GameState.peerId) {
+            div.classList.add('me');
+        }
+        if (player.out) {
+            div.classList.add('out');
+        }
+        
+        div.style.left = pos.x + 'px';
+        div.style.top = pos.y + 'px';
+        div.style.transform = 'translate(-50%, -50%)';
+        
+        div.innerHTML = `
+            ${index === GameState.game.currentPlayer && GameState.game.state === 'PLAYING' ? '<div class="player-arrow">👇</div>' : ''}
+            <div class="game-player-avatar" style="background-color: ${player.color};">
+                ${player.emoji}
+            </div>
+            <div class="game-player-name">${player.name}</div>
+            <div class="game-player-lives">${'❤️'.repeat(player.lives)}</div>
+        `;
+        
+        circle.appendChild(div);
+    });
+}
+
+function updateUsedWords() {
+    const list = document.getElementById('usedWordsList');
+    list.innerHTML = '';
+    
+    const recentWords = GameState.game.usedWords.slice().reverse().slice(0, 20);
+    recentWords.forEach(word => {
+        const div = document.createElement('div');
+        div.className = 'used-word';
+        div.textContent = word;
+        list.appendChild(div);
+    });
+}
+
+function updateInputArea() {
+    const inputArea = document.getElementById('gameInputArea');
+    const statusText = document.getElementById('gameStatusText');
+    const wordInput = document.getElementById('wordInput');
+    
+    const currentPlayer = GameState.game.players[GameState.game.currentPlayer];
+    const isMyTurn = currentPlayer && currentPlayer.id === GameState.peerId && GameState.game.state === 'PLAYING';
+    
+    if (isMyTurn) {
+        inputArea.classList.remove('hidden');
+        statusText.classList.add('hidden');
+        wordInput.focus();
+    } else {
+        inputArea.classList.add('hidden');
+        statusText.classList.remove('hidden');
+        
+        if (GameState.game.state === 'ENDED') {
+            statusText.textContent = '🏆 Partie terminée !';
+        } else if (GameState.game.state === 'PLAYING' && currentPlayer) {
+            statusText.textContent = `Tour de ${currentPlayer.name}...`;
+        } else {
+            statusText.textContent = 'En attente...';
+        }
+    }
+}
+
+function updatePing() {
+    const pingDisplay = document.getElementById('lobbyPing');
+    if (pingDisplay) {
+        pingDisplay.textContent = GameState.ping + 'ms';
+    }
+}
+
+// ===== CHAT =====
+function addChatMessage(playerId, message, emoji = null, color = null) {
+    const messages = document.getElementById('chatMessages');
+    const div = document.createElement('div');
+    div.className = 'chat-message';
+    
+    if (playerId === 'system') {
+        div.classList.add('system');
+        div.innerHTML = `
+            <div class="chat-message-text">${message}</div>
+        `;
+    } else {
+        const player = GameState.game.players.find(p => p.id === playerId);
+        const playerEmoji = player ? player.emoji : emoji || '👤';
+        const playerColor = player ? player.color : color || '#3b82f6';
+        const playerName = player ? player.name : 'Inconnu';
+        
+        div.innerHTML = `
+            <div class="chat-message-avatar" style="background-color: ${playerColor};">
+                ${playerEmoji}
+            </div>
+            <div class="chat-message-content">
+                <div class="chat-message-name">${playerName}</div>
+                <div class="chat-message-text">${message}</div>
+            </div>
+        `;
+    }
+    
+    messages.appendChild(div);
+    messages.scrollTop = messages.scrollHeight;
+    
+    if (!document.getElementById('chatPanel').classList.contains('active')) {
+        GameState.chat.unread++;
+        updateChatBadge();
+    }
+}
+
+function sendChatMessage() {
+    const input = document.getElementById('chatInput');
+    const message = input.value.trim();
+    
+    if (!message) return;
+    
+    const data = {
+        type: 'CHAT',
+        playerId: GameState.peerId,
+        message: message,
+        emoji: GameState.emoji,
+        color: GameState.color
+    };
+    
+    if (GameState.isHost) {
+        addChatMessage(GameState.peerId, message, GameState.emoji, GameState.color);
+        broadcast(data);
+    } else if (GameState.connection) {
+        GameState.connection.send(data);
+        addChatMessage(GameState.peerId, message, GameState.emoji, GameState.color);
+    }
+    
+    input.value = '';
+}
+
+function sendReaction(reaction) {
+    const data = {
+        type: 'REACTION',
+        playerId: GameState.peerId,
+        reaction: reaction
+    };
+    
+    if (GameState.isHost) {
+        showReaction(GameState.peerId, reaction);
+        broadcast(data);
+    } else if (GameState.connection) {
+        GameState.connection.send(data);
+        showReaction(GameState.peerId, reaction);
+    }
+}
+
+function showReaction(playerId, reaction) {
+    addChatMessage(playerId, reaction, null, null);
+}
+
+function updateChatBadge() {
+    const badge = document.getElementById('chatBadge');
+    if (GameState.chat.unread > 0) {
+        badge.textContent = GameState.chat.unread;
+        badge.classList.remove('hidden');
+    } else {
+        badge.classList.add('hidden');
+    }
+}
+
+function toggleChat() {
+    const panel = document.getElementById('chatPanel');
+    panel.classList.toggle('active');
+    
+    if (panel.classList.contains('active')) {
+        GameState.chat.unread = 0;
+        updateChatBadge();
+        document.getElementById('chatInput').focus();
+    }
+}
+
+// ===== PING MONITORING =====
+function startPingInterval() {
+    setInterval(() => {
+        if (GameState.connection && !GameState.isHost) {
+            GameState.lastPingTime = Date.now();
+            GameState.connection.send({ type: 'PING', timestamp: GameState.lastPingTime });
+        }
+    }, 5000);
+}
+
+// ===== EVENT LISTENERS =====
+document.addEventListener('DOMContentLoaded', () => {
+    initTheme();
+    initEmojiPicker();
+    
+    // Theme
+    document.getElementById('themeToggle').onclick = toggleTheme;
+    
+    // Username
+    document.getElementById('usernameInput').oninput = (e) => {
+        GameState.username = e.target.value;
+    };
+    
+    // Color
+    document.getElementById('colorPicker').onchange = (e) => {
+        GameState.color = e.target.value;
+    };
+    
+    // Emoji
+    document.getElementById('emojiBtn').onclick = () => {
+        document.getElementById('emojiPicker').classList.toggle('active');
+    };
+    
+    document.onclick = (e) => {
+        const picker = document.getElementById('emojiPicker');
+        const btn = document.getElementById('emojiBtn');
+        if (!picker.contains(e.target) && e.target !== btn) {
+            picker.classList.remove('active');
+        }
+    };
+    
+    // Home actions
+    document.getElementById('soloBtn').onclick = startSoloMode;
+    
+    document.getElementById('createBtn').onclick = () => {
+        document.getElementById('createModal').classList.add('active');
+    };
+    
+    document.getElementById('joinBtn').onclick = () => {
+        document.getElementById('joinModal').classList.add('active');
+    };
+    
+    document.getElementById('rulesBtn').onclick = () => {
+        document.getElementById('rulesModal').classList.add('active');
+    };
+    
+    // Create modal
+    document.getElementById('closeCreateModal').onclick = () => {
+        document.getElementById('createModal').classList.remove('active');
+    };
+    
+    document.getElementById('livesRange').oninput = (e) => {
+        document.getElementById('livesValue').textContent = e.target.value;
+    };
+    
+    document.getElementById('timeRange').oninput = (e) => {
+        document.getElementById('timeValue').textContent = e.target.value + 's';
+    };
+    
+    document.getElementById('confirmCreate').onclick = () => {
+        const config = {
+            lives: parseInt(document.getElementById('livesRange').value),
+            initialTime: parseInt(document.getElementById('timeRange').value),
+            position: document.querySelector('input[name="position"]:checked').value,
+            syllableLength: parseInt(document.querySelector('input[name="sylLength"]:checked').value),
+            strict: document.getElementById('strictMode').checked
+        };
+        
+        document.getElementById('createModal').classList.remove('active');
+        createGame(config);
+    };
+    
+    // Join modal
+    document.getElementById('closeJoinModal').onclick = () => {
+        document.getElementById('joinModal').classList.remove('active');
+    };
+    
+    document.getElementById('joinCodeInput').oninput = (e) => {
+        e.target.value = e.target.value.replace(/\D/g, '').slice(0, 6);
+    };
+    
+    document.getElementById('confirmJoin').onclick = () => {
+        const code = document.getElementById('joinCodeInput').value;
+        document.getElementById('joinModal').classList.remove('active');
+        joinGame(code);
+    };
+    
+    // Rules modal
+    document.getElementById('closeRulesModal').onclick = () => {
+        document.getElementById('rulesModal').classList.remove('active');
+    };
+    
+    document.getElementById('closeRulesBtn').onclick = () => {
+        document.getElementById('rulesModal').classList.remove('active');
+    };
+    
+    // Lobby
+    document.getElementById('copyCodeBtn').onclick = () => {
+        navigator.clipboard.writeText(GameState.game.code);
+        showNotification('Code copié !', 'Le code a été copié dans le presse-papier', 'success');
+    };
+    
+    document.getElementById('leaveLobbyBtn').onclick = () => {
+        if (GameState.isHost) {
+            broadcast({ type: 'CHAT', playerId: 'system', message: 'L\'hôte a quitté la partie' });
+            GameState.connections.forEach(conn => conn.close());
+        } else if (GameState.connection) {
+            GameState.connection.close();
+        }
+        
+        showScreen('home');
+    };
+    
+    document.getElementById('startGameBtn').onclick = startGame;
+    
+    // Game
+    document.getElementById('wordInput').onkeypress = (e) => {
+        if (e.key === 'Enter') {
+            submitWord();
+        }
+    };
+    
+    document.getElementById('submitWordBtn').onclick = submitWord;
+    
+    document.getElementById('leaveGameBtn').onclick = () => {
+        if (confirm('Êtes-vous sûr de vouloir quitter la partie ?')) {
+            if (GameState.isHost) {
+                broadcast({ type: 'CHAT', playerId: 'system', message: 'L\'hôte a quitté la partie' });
+                GameState.connections.forEach(conn => conn.close());
+            } else if (GameState.connection) {
+                GameState.connection.close();
+            }
+            
+            if (GameState.game.interval) {
+                clearInterval(GameState.game.interval);
+            }
+            
+            showScreen('home');
+        }
+    };
+    
+    // Solo
+    document.getElementById('soloWordInput').onkeypress = (e) => {
+        if (e.key === 'Enter') {
+            submitSoloWord();
+        }
+    };
+    
+    document.getElementById('soloSubmitBtn').onclick = submitSoloWord;
+    
+    document.getElementById('quitSoloBtn').onclick = () => {
+        if (GameState.solo.interval) {
+            clearInterval(GameState.solo.interval);
+        }
+        showScreen('home');
+    };
+    
+    // Victory
+    document.getElementById('victoryHomeBtn').onclick = () => {
+        document.getElementById('victoryOverlay').classList.remove('active');
+        showScreen('home');
+    };
+    
+    document.getElementById('victoryRestartBtn').onclick = () => {
+        document.getElementById('victoryOverlay').classList.remove('active');
+        
+        if (GameState.isHost) {
+            GameState.game.state = 'WAITING';
+            GameState.game.players.forEach(p => {
+                p.lives = GameState.game.config.lives;
+                p.out = false;
+            });
+            GameState.game.usedWords = [];
+            GameState.game.currentPlayer = 0;
+            GameState.game.winner = null;
+            
+            broadcast({ type: 'SYNC', game: serializeGame() });
+            showScreen('lobby');
+            updateLobby();
+        }
+    };
+    
+    // Chat
+    document.getElementById('chatToggle').onclick = toggleChat;
+    document.getElementById('chatClose').onclick = toggleChat;
+    
+    document.getElementById('chatInput').onkeypress = (e) => {
+        if (e.key === 'Enter') {
+            sendChatMessage();
+        }
+    };
+    
+    document.getElementById('chatSend').onclick = sendChatMessage;
+    
+    document.querySelectorAll('.reaction-btn').forEach(btn => {
+        btn.onclick = () => {
+            sendReaction(btn.dataset.reaction);
+        };
+    });
+    
+    // Close modals on outside click
+    document.querySelectorAll('.modal').forEach(modal => {
+        modal.onclick = (e) => {
+            if (e.target === modal) {
+                modal.classList.remove('active');
+            }
+        };
+    });
+});
+
+function submitWord() {
+    const input = document.getElementById('wordInput');
+    const word = input.value.trim().toUpperCase();
+    
+    if (!word) return;
+    
+    if (GameState.isHost) {
+        validateAndProcessWord(word, GameState.peerId);
+    } else if (GameState.connection) {
+        GameState.connection.send({
+            type: 'WORD',
+            playerId: GameState.peerId,
+            word: word
+        });
+    }
+    
+    input.value = '';
+}
+
+// ===== WINDOW EVENTS =====
 window.addEventListener('beforeunload', (e) => {
-    if (Game.state.game && Game.state.game.state === 'PLAYING') {
+    if (GameState.game.state === 'PLAYING') {
         e.preventDefault();
         e.returnValue = '';
     }
 });
+
+// Initialize peer on load
+window.addEventListener('load', () => {
+    setTimeout(() => {
+        initPeer().catch(error => {
+            console.error('Failed to initialize peer:', error);
+        });
+    }, 1000);
+});
 </script>
+
 </body>
 </html>
