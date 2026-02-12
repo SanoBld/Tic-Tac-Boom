@@ -1,42 +1,39 @@
 /* dictionary.js */
 
+// On utilise un Set pour que la vérification des mots soit instantanée
 window.DICTIONARY_DATA = new Set();
 
 async function loadFullDictionary() {
     try {
-        // On charge ton fichier French.txt
+        console.log("⏳ Chargement du dictionnaire...");
+        
+        // On charge ton fichier French.txt (le nouveau que tu as créé)
         const response = await fetch('French.txt'); 
         const text = await response.text();
         
-        const lines = text.split(/\r?\n/);
-        const cleanWords = [];
+        // On sépare chaque ligne, on nettoie les espaces et on met en majuscules
+        // On filtre aussi pour enlever les lignes vides si elles existent
+        const rawWords = text.split(/\r?\n/);
+        
+        const cleanWords = rawWords
+            .map(w => w.trim().toUpperCase())
+            .filter(w => w.length > 1);
 
-        for (let line of lines) {
-            // 1. On ignore la première ligne (le chiffre)
-            if (!isNaN(line.trim())) continue;
-
-            // 2. On ne garde que ce qui est AVANT le slash '/' ou l'espace
-            let word = line.split('/')[0].split(' ')[0].trim();
-
-            // 3. On nettoie (accents, majuscules)
-            word = word.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase();
-
-            // 4. On ignore les mots trop courts ou bizarres (chiffres, symboles)
-            if (word.length > 1 && /^[A-Z-]+$/.test(word)) {
-                cleanWords.push(word);
-            }
-        }
-
-        // Utilisation d'un Set pour supprimer les doublons et chercher super vite
+        // On stocke tout dans le Set
         window.DICTIONARY_DATA = new Set(cleanWords);
 
-        console.log(`📚 Dictionnaire nettoyé : ${window.DICTIONARY_DATA.size} mots chargés.`);
+        console.log(`✅ Dictionnaire prêt : ${window.DICTIONARY_DATA.size} mots chargés.`);
+        
+        // On prévient le jeu que c'est prêt
         window.dispatchEvent(new Event('dictionaryReady'));
         
     } catch (e) {
-        console.error("Erreur de chargement :", e);
-        window.DICTIONARY_DATA = new Set(["BOMBE", "EXPLOSION", "VOCABULAIRE"]);
+        console.error("❌ Erreur critique de chargement :", e);
+        // Liste de secours minimale pour que le jeu ne plante pas
+        window.DICTIONARY_DATA = new Set(["BOMBE", "EXPLOSION", "JOUEUR", "VICTOIRE"]);
+        window.dispatchEvent(new Event('dictionaryReady'));
     }
 }
 
+// Lancement automatique au chargement de la page
 loadFullDictionary();

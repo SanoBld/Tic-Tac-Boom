@@ -9,30 +9,84 @@
 </head>
 <body>
     <div class="container">
-        <div class="card" style="max-width: 500px; width: 100%;">
-            <div style="font-size: 4rem; margin-bottom: 10px;">💣</div>
+        <div class="card">
+            <div class="bomb-icon-animated">💣</div>
             <h1>WORD BOMB</h1>
-            <p style="color: var(--text-muted); margin-bottom: 2rem; font-size: 1.1rem;">
+            <p style="color: var(--text-muted); margin-bottom: 1.5rem; font-size: clamp(0.95rem, 2.5vw, 1.1rem); line-height: 1.6;">
                 Réflexion rapide • Vocabulaire • Survie
             </p>
             
-            <a href="host.html" style="text-decoration: none;">
-                <button class="btn">
-                    <span>📺</span> CRÉER UNE PARTIE (HÔTE)
-                </button>
-            </a>
-            <br>
-            <a href="player.html" style="text-decoration: none;">
-                <button class="btn secondary">
-                    <span>📱</span> REJOINDRE SUR MOBILE
-                </button>
-            </a>
+            <!-- Description du jeu -->
+            <div class="info-section" style="margin-bottom: 1.2rem;">
+                <h3>📖 Comment jouer ?</h3>
+                <ul class="info-list">
+                    <li><strong>Objectif</strong> : Trouvez un mot contenant la syllabe affichée avant la fin du chrono !</li>
+                    <li><strong>Attention</strong> : Chaque mot ne peut être utilisé qu'une seule fois</li>
+                    <li><strong>Vies</strong> : Perdez une vie si vous ne répondez pas à temps</li>
+                    <li><strong>Victoire</strong> : Soyez le dernier survivant !</li>
+                </ul>
+            </div>
+
+            <div class="info-section" style="margin-bottom: 1.5rem;">
+                <h3>🎮 Modes de jeu disponibles</h3>
+                <ul class="info-list">
+                    <li><strong>Classique</strong> : Le mode original avec syllabes aléatoires</li>
+                    <li><strong>Rapide</strong> : Temps réduit, action intense !</li>
+                    <li><strong>Survie</strong> : Une seule vie, maximum de concentration</li>
+                    <li><strong>Marathon</strong> : Accumulation de points, pas d'élimination</li>
+                </ul>
+            </div>
+
+            <div class="button-group">
+                <a href="host.html" style="text-decoration: none; width: 100%;">
+                    <button class="btn">
+                        <span>📺</span> CRÉER UNE PARTIE (HÔTE)
+                    </button>
+                </a>
+                <a href="player.html" style="text-decoration: none; width: 100%;">
+                    <button class="btn secondary">
+                        <span>📱</span> REJOINDRE SUR MOBILE
+                    </button>
+                </a>
+            </div>
+
+            <div style="margin-top: 1.5rem; padding: clamp(0.75rem, 2vw, 1rem); background: rgba(99, 102, 241, 0.1); border-radius: 8px; border: 1px solid rgba(99, 102, 241, 0.3);">
+                <p style="margin: 0; font-size: clamp(0.85rem, 2vw, 0.9rem); color: var(--text-muted); line-height: 1.5;">
+                    💡 <strong style="color: var(--text-main);">Astuce</strong> : L'hôte peut jouer avec les autres joueurs !
+                </p>
+            </div>
         </div>
     </div>
 
     <script>
-        // Petite animation d'entrée
+        // Animations d'entrée
         gsap.from(".card", {y: 50, opacity: 0, duration: 1, ease: "power3.out"});
+        gsap.from(".bomb-icon-animated", {
+            scale: 0,
+            rotation: 360,
+            duration: 0.8,
+            ease: "back.out(1.7)",
+            delay: 0.2
+        });
+        
+        // Animation continue de la bombe
+        gsap.to(".bomb-icon-animated", {
+            y: -10,
+            duration: 1.5,
+            repeat: -1,
+            yoyo: true,
+            ease: "power1.inOut"
+        });
+
+        // Animation des éléments de la liste
+        gsap.from(".info-list li", {
+            x: -20,
+            opacity: 0,
+            duration: 0.5,
+            stagger: 0.1,
+            ease: "power2.out",
+            delay: 0.5
+        });
     </script>
 </body>
 </html>

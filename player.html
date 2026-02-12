@@ -9,65 +9,156 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
 </head>
 <body>
-    <div class="container mobile-wrapper">
+    <div class="mobile-wrapper">
         
-        <div id="login-view" class="card" style="width:100%; margin:auto;">
-            <h2>CONNEXION</h2>
-            <input type="text" id="room-code" placeholder="CODE SALLE (ex: ABCD)" style="text-transform:uppercase; margin-bottom:10px;">
-            <input type="text" id="p-name" placeholder="VOTRE PSEUDO" maxlength="12" style="margin-bottom:10px;">
-            <div style="display:flex; gap:10px; margin-bottom:20px;">
-                <input type="text" id="p-emoji" value="😎" style="width:60px; flex:none;">
-                <button class="btn" onclick="joinGame()">REJOINDRE</button>
+        <!-- ÉCRAN DE CONNEXION -->
+        <div id="login-view" class="card" style="max-width: 100%; margin: auto;">
+            <h2>🎮 CONNEXION</h2>
+            
+            <input type="text" id="room-code" placeholder="CODE SALLE (ex: ABCD)" style="text-transform:uppercase; margin-bottom:15px;">
+            
+            <input type="text" id="p-name" placeholder="VOTRE PSEUDO" maxlength="12" style="margin-bottom:15px;">
+            
+            <!-- Sélecteur d'Emoji -->
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 8px; font-size: clamp(0.85rem, 2vw, 0.9rem); color: var(--text-muted); text-align: left;">
+                    Choisissez votre avatar :
+                </label>
+                <div class="picker-grid" id="emoji-picker">
+                    <!-- Rempli par JS -->
+                </div>
             </div>
-            <p id="conn-status" style="font-size:0.8rem; color:var(--text-muted)"></p>
+            
+            <!-- Sélecteur de Couleur -->
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; margin-bottom: 8px; font-size: clamp(0.85rem, 2vw, 0.9rem); color: var(--text-muted); text-align: left;">
+                    Choisissez votre couleur :
+                </label>
+                <div class="picker-grid" id="color-picker">
+                    <!-- Rempli par JS -->
+                </div>
+            </div>
+            
+            <button class="btn" onclick="joinGame()">REJOINDRE LA PARTIE</button>
+            
+            <p id="conn-status" style="font-size:clamp(0.75rem, 2vw, 0.8rem); color:var(--text-muted); margin-top: 15px; min-height: 1.2em;"></p>
         </div>
 
-        <div id="game-view" style="display:none; width:100%; height:100%; flex-direction:column;">
+        <!-- ÉCRAN D'ATTENTE -->
+        <div id="lobby-view" style="display:none; flex-direction:column; flex:1; overflow-y: auto;">
+            <div class="card" style="max-width: 100%; display: flex; flex-direction: column; height: 100%;">
+                <h2 style="margin-bottom: 1rem;">🎯 SALLE : <span id="lobby-room-code" class="mono" style="color: var(--accent);">XXXX</span></h2>
+                
+                <div style="margin-bottom: 20px; padding: 15px; background: rgba(99, 102, 241, 0.1); border-radius: 8px; border: 1px solid rgba(99, 102, 241, 0.3);">
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                        <span id="lobby-my-emoji" style="font-size: clamp(1.8rem, 5vw, 2rem);"></span>
+                        <div style="flex: 1; min-width: 0;">
+                            <div id="lobby-my-name" style="font-weight: 700; font-size: clamp(1rem, 3vw, 1.1rem); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"></div>
+                            <div style="font-size: clamp(0.75rem, 2vw, 0.8rem); color: var(--text-muted);">C'est vous !</div>
+                        </div>
+                        <div id="lobby-my-color" style="width: clamp(28px, 7vw, 30px); height: clamp(28px, 7vw, 30px); border-radius: 50%; border: 3px solid white; flex-shrink: 0;"></div>
+                    </div>
+                </div>
+
+                <div style="flex: 1; overflow-y: auto; min-height: 0;">
+                    <h3 style="font-size: clamp(0.95rem, 2.5vw, 1rem); margin-bottom: 10px;">
+                        Joueurs connectés (<span id="lobby-count">0</span>)
+                    </h3>
+                    <div id="lobby-players-list">
+                        <!-- Rempli par JS -->
+                    </div>
+                </div>
+
+                <div style="margin-top: 15px; padding: 12px; background: rgba(0, 0, 0, 0.2); border-radius: 8px; text-align: center; flex-shrink: 0;">
+                    <p style="margin: 0; font-size: clamp(0.85rem, 2vw, 0.9rem); color: var(--text-muted);">
+                        ⏳ En attente du début de la partie...
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ÉCRAN DE JEU -->
+        <div id="game-view" style="display:none; flex-direction:column; flex:1; overflow-y: auto;">
             
+            <!-- Header avec infos -->
             <div class="mobile-header">
                 <div class="latency-pill" id="ping-display" onclick="togglePing()" style="cursor:pointer; opacity:0.5">
                     <span style="font-size:10px">📶</span> <span id="ping-val">--</span>ms
                 </div>
-                <div style="font-weight:bold" id="lives-display">❤️❤️</div>
+                <div style="font-weight:bold; font-size: clamp(1rem, 3vw, 1.1rem);" id="lives-display">❤️❤️</div>
             </div>
 
+            <!-- Barre de stats -->
+            <div class="stats-bar">
+                <div class="stat-item">
+                    <div class="stat-value" id="stat-players">-</div>
+                    <div class="stat-label">Restants</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="stat-round">-</div>
+                    <div class="stat-label">Tour</div>
+                </div>
+            </div>
+
+            <!-- Info joueurs si < 5 -->
+            <div id="players-info" class="players-info-compact" style="display: none;">
+                <div class="players-names" id="remaining-players-names"></div>
+            </div>
+
+            <!-- Zone de statut -->
             <div class="mobile-status" id="status-area">
-                <div style="font-size:3rem; margin-bottom:10px;" id="status-icon">⏳</div>
-                <h2 id="status-text">EN ATTENTE</h2>
-                <p style="color:var(--text-muted); font-size:0.9rem" id="status-sub">La partie va commencer...</p>
+                <div style="font-size:clamp(2.5rem, 8vw, 3rem); margin-bottom:10px;" id="status-icon">⏳</div>
+                <h2 id="status-text" style="font-size: clamp(1.2rem, 4vw, 1.5rem);">EN ATTENTE</h2>
+                <p style="color:var(--text-muted); font-size:clamp(0.85rem, 2vw, 0.9rem); line-height: 1.5;" id="status-sub">La partie va commencer...</p>
             </div>
 
-            <div id="input-area" style="display:none; flex-direction:column; width:100%; margin-bottom:20px;">
+            <!-- Zone d'input -->
+            <div id="input-area" style="display:none; flex-direction:column; width:100%; margin-bottom:20px; flex-shrink: 0;">
                 <div style="text-align:center; margin-bottom:10px;">
-                    <span style="color:var(--text-muted); font-size:0.8rem;">SYLLABE</span>
-                    <div id="syl-text" style="font-size:3rem; font-weight:800; color:var(--text-main);">---</div>
+                    <span style="color:var(--text-muted); font-size:clamp(0.75rem, 2vw, 0.8rem);">SYLLABE À TROUVER</span>
+                    <div id="syl-text" style="font-size:clamp(2.5rem, 8vw, 3rem); font-weight:800; color:var(--text-main);">---</div>
                 </div>
 
-                <div style="width:100%; height:6px; background:#333; border-radius:3px; overflow:hidden; margin-bottom:15px;">
-                    <div id="timer-bar" style="width:100%; height:100%; background:var(--primary);"></div>
+                <div style="width:100%; height:clamp(6px, 2vw, 8px); background:#333; border-radius:4px; overflow:hidden; margin-bottom:15px;">
+                    <div id="timer-bar" style="width:100%; height:100%; background:var(--primary); transition: background 0.3s;"></div>
                 </div>
 
-                <input type="text" id="word-input" placeholder="Votre mot..." autocomplete="off" style="font-size:1.3rem; padding:18px;">
-                <div id="feedback-text" style="height:20px; color:var(--danger); text-align:center; font-weight:bold; margin-top:5px;"></div>
+                <input type="text" id="word-input" placeholder="Votre mot..." autocomplete="off" style="font-size:clamp(1.1rem, 3vw, 1.3rem); padding:clamp(14px, 3vw, 18px);">
+                <div id="feedback-text" style="min-height:25px; color:var(--danger); text-align:center; font-weight:bold; margin-top:8px; font-size:clamp(0.85rem, 2vw, 0.9rem);"></div>
             </div>
-
-            <div style="height: 20px;"></div>
 
         </div>
     </div>
 
     <script>
+        // Configuration
+        const AVAILABLE_EMOJIS = ['😎', '🔥', '⚡', '🌟', '🎯', '🚀', '💎', '👑', '🦄', '🐉', '🎮', '🎨', '🎭', '🎪', '🎸', '⚽', '🏀', '🎳', '🎲', '🃏'];
+        const AVAILABLE_COLORS = [
+            '#ef4444', '#f59e0b', '#eab308', '#22c55e', '#06b6d4',
+            '#3b82f6', '#6366f1', '#8b5cf6', '#ec4899', '#f43f5e'
+        ];
+
         let peer, conn;
         let myId;
         let pingStart = 0;
+        let selectedEmoji = AVAILABLE_EMOJIS[0];
+        let selectedColor = AVAILABLE_COLORS[0];
+        let gameState = {
+            playersAlive: 0,
+            totalPlayers: 0,
+            currentRound: 0,
+            alivePlayers: []
+        };
 
-        // Elements
+        // Éléments DOM
         const views = {
             login: document.getElementById('login-view'),
+            lobby: document.getElementById('lobby-view'),
             game: document.getElementById('game-view'),
             input: document.getElementById('input-area'),
             status: document.getElementById('status-area')
         };
+
         const els = {
             syl: document.getElementById('syl-text'),
             inp: document.getElementById('word-input'),
@@ -78,20 +169,66 @@
             pingPill: document.getElementById('ping-display'),
             statIcon: document.getElementById('status-icon'),
             statText: document.getElementById('status-text'),
-            statSub: document.getElementById('status-sub')
+            statSub: document.getElementById('status-sub'),
+            statPlayers: document.getElementById('stat-players'),
+            statRound: document.getElementById('stat-round'),
+            playersInfo: document.getElementById('players-info'),
+            remainingNames: document.getElementById('remaining-players-names')
         };
 
-        // Restore name
-        if(localStorage.getItem('wb_name')) document.getElementById('p-name').value = localStorage.getItem('wb_name');
+        // Initialisation des pickers
+        function initPickers() {
+            const emojiPicker = document.getElementById('emoji-picker');
+            const colorPicker = document.getElementById('color-picker');
+
+            // Emojis
+            AVAILABLE_EMOJIS.forEach((emoji, idx) => {
+                const div = document.createElement('div');
+                div.className = 'picker-item' + (idx === 0 ? ' selected' : '');
+                div.textContent = emoji;
+                div.onclick = () => selectEmoji(emoji, div);
+                emojiPicker.appendChild(div);
+            });
+
+            // Couleurs
+            AVAILABLE_COLORS.forEach((color, idx) => {
+                const div = document.createElement('div');
+                div.className = 'picker-item color-picker-item' + (idx === 0 ? ' selected' : '');
+                div.style.backgroundColor = color;
+                div.onclick = () => selectColor(color, div);
+                colorPicker.appendChild(div);
+            });
+        }
+
+        function selectEmoji(emoji, element) {
+            selectedEmoji = emoji;
+            document.querySelectorAll('#emoji-picker .picker-item').forEach(el => el.classList.remove('selected'));
+            element.classList.add('selected');
+            gsap.from(element, {scale: 0.8, duration: 0.2, ease: 'back.out(2)'});
+        }
+
+        function selectColor(color, element) {
+            selectedColor = color;
+            document.querySelectorAll('#color-picker .picker-item').forEach(el => el.classList.remove('selected'));
+            element.classList.add('selected');
+            gsap.from(element, {scale: 0.8, duration: 0.2, ease: 'back.out(2)'});
+        }
+
+        // Restaurer le nom
+        if(localStorage.getItem('wb_name')) {
+            document.getElementById('p-name').value = localStorage.getItem('wb_name');
+        }
 
         function joinGame() {
             const code = document.getElementById('room-code').value.toUpperCase();
-            const name = document.getElementById('p-name').value;
-            const emoji = document.getElementById('p-emoji').value;
+            const name = document.getElementById('p-name').value.trim();
 
-            if(!code || !name) return;
+            if(!code || !name) {
+                alert('Veuillez remplir tous les champs !');
+                return;
+            }
+
             localStorage.setItem('wb_name', name);
-
             document.getElementById('conn-status').innerText = "Connexion au serveur...";
             
             peer = new Peer();
@@ -100,9 +237,12 @@
                 conn = peer.connect("WB2-HOST-" + code);
                 
                 conn.on('open', () => {
-                    views.login.style.display = 'none';
-                    views.game.style.display = 'flex';
-                    conn.send({type: 'JOIN', name, emoji});
+                    conn.send({
+                        type: 'JOIN', 
+                        name, 
+                        emoji: selectedEmoji,
+                        color: selectedColor
+                    });
                 });
 
                 conn.on('data', handleData);
@@ -112,29 +252,59 @@
                     location.reload();
                 });
                 
-                // Erreur de connexion
                 setTimeout(() => {
-                    if(!conn.open) document.getElementById('conn-status').innerText = "Hôte introuvable. Vérifiez le code.";
+                    if(!conn.open) {
+                        document.getElementById('conn-status').innerText = "Hôte introuvable. Vérifiez le code.";
+                    }
                 }, 3000);
+            });
+
+            peer.on('error', (err) => {
+                console.error('Erreur PeerJS:', err);
+                document.getElementById('conn-status').innerText = "Erreur de connexion. Réessayez.";
             });
         }
 
         let maxTime = 10;
-        let timerAnim;
 
         function handleData(data) {
-            // PING SYSTEM
+            console.log('Data received:', data.type);
+
+            if(data.type === 'WELCOME') {
+                views.login.style.display = 'none';
+                views.lobby.style.display = 'flex';
+                document.getElementById('lobby-room-code').innerText = document.getElementById('room-code').value;
+                document.getElementById('lobby-my-name').innerText = document.getElementById('p-name').value;
+                document.getElementById('lobby-my-emoji').innerText = selectedEmoji;
+                document.getElementById('lobby-my-color').style.backgroundColor = selectedColor;
+                
+                gsap.from(views.lobby, {opacity: 0, y: 20, duration: 0.5});
+            }
+
+            if(data.type === 'LOBBY_UPDATE') {
+                updateLobbyList(data.players);
+            }
+
+            if(data.type === 'GAME_START') {
+                views.lobby.style.display = 'none';
+                views.game.style.display = 'flex';
+                gameState.totalPlayers = data.players.length;
+                gameState.playersAlive = data.players.filter(p => p.alive).length;
+                updateGameStats();
+                gsap.from(views.game, {opacity: 0, scale: 0.95, duration: 0.5});
+            }
+
             if(data.type === 'PING') {
                 conn.send({type: 'PONG', ts: data.ts});
-                // Calcul local approximatif (Half Trip)
                 const now = Date.now();
-                const lat = Math.floor((now - data.ts) / 2); // Très approximatif car asymétrique, mais ok pour UX
+                const lat = Math.floor((now - data.ts) / 2);
                 updatePing(lat);
             }
 
             if(data.type === 'NEW_TURN') {
                 els.syl.innerText = data.syllable;
                 maxTime = data.maxTime;
+                gameState.currentRound = data.round || gameState.currentRound + 1;
                 
                 if(data.player === myId) {
                     setMyTurn(true);
@@ -142,35 +312,40 @@
                 } else {
                     setMyTurn(false);
                     stopTimerAnim();
+                    const playerName = data.playerName || 'un joueur';
+                    setStatus('👀', 'TOUR DE ' + playerName.toUpperCase(), 'Attendez votre tour');
                 }
+                
+                updateGameStats();
             }
 
-            if(data.type === 'SYNC_TIME') {
-                // Si c'est mon tour, on recale la barre
-                if(views.input.style.display === 'flex') {
-                    // Optionnel: lissage
-                }
+            if(data.type === 'PLAYERS_UPDATE') {
+                gameState.alivePlayers = data.players.filter(p => p.alive);
+                gameState.playersAlive = gameState.alivePlayers.length;
+                updateGameStats();
+                updateRemainingPlayers();
             }
 
             if(data.type === 'FEEDBACK') {
                 if(data.valid) {
                     views.input.style.display = 'none';
                     views.status.style.display = 'flex';
-                    setStatus('✅', 'VALIDÉ !', 'Bien joué');
+                    setStatus('✅', 'VALIDÉ !', 'Bien joué ! +1 point');
                     stopTimerAnim();
+                    navigator.vibrate && navigator.vibrate(100);
                 } else {
                     els.fb.innerText = data.msg;
                     els.inp.classList.add('shake');
                     setTimeout(() => els.inp.classList.remove('shake'), 400);
-                    navigator.vibrate(200);
+                    navigator.vibrate && navigator.vibrate(200);
                 }
             }
 
             if(data.type === 'HIT') {
                 if(data.player === myId) {
                     els.lives.innerText = "❤️".repeat(data.lives);
-                    navigator.vibrate([100, 50, 100, 50, 500]);
-                    setStatus('💥', 'BOOM !', 'Tu as perdu une vie');
+                    navigator.vibrate && navigator.vibrate([100, 50, 100, 50, 500]);
+                    setStatus('💥', 'BOOM !', 'Vous avez perdu une vie');
                 }
             }
 
@@ -178,13 +353,64 @@
                 if(data.player === myId) {
                     els.lives.innerText = "💀";
                     setMyTurn(false);
-                    setStatus('💀', 'ÉLIMINÉ', 'Attends la fin de la partie');
+                    setStatus('💀', 'ÉLIMINÉ', 'Vous êtes éliminé, mais vous pouvez continuer à regarder !');
+                    navigator.vibrate && navigator.vibrate([200, 100, 200, 100, 500]);
                 }
             }
             
             if(data.type === 'GAME_OVER') {
                 setMyTurn(false);
-                setStatus('🏆', 'FINIE', 'Vainqueur : ' + data.winner);
+                const isWinner = data.winner === document.getElementById('p-name').value;
+                if(isWinner) {
+                    setStatus('🏆', 'VICTOIRE !', 'Vous avez gagné la partie !');
+                    navigator.vibrate && navigator.vibrate([100, 50, 100, 50, 100, 50, 500]);
+                } else {
+                    setStatus('🏁', 'PARTIE TERMINÉE', 'Vainqueur : ' + data.winner);
+                }
+            }
+        }
+
+        function updateLobbyList(players) {
+            const list = document.getElementById('lobby-players-list');
+            list.innerHTML = '';
+            
+            let count = 0;
+            players.forEach(player => {
+                if(player.id === myId) return;
+                count++;
+                
+                const item = document.createElement('div');
+                item.className = 'lobby-player-item slide-in-right';
+                item.innerHTML = `
+                    <div class="lobby-player-avatar" style="border-color: ${player.color || '#6366f1'};">
+                        ${player.emoji}
+                    </div>
+                    <div class="lobby-player-info">
+                        <div class="lobby-player-name">${player.name}</div>
+                        <div class="lobby-player-ping" style="color: ${getPingColor(player.ping || 0)}">
+                            ${player.ping ? player.ping + 'ms' : '...'}
+                        </div>
+                    </div>
+                `;
+                list.appendChild(item);
+            });
+            
+            document.getElementById('lobby-count').innerText = count + 1;
+        }
+
+        function updateGameStats() {
+            els.statPlayers.innerText = gameState.playersAlive;
+            els.statRound.innerText = gameState.currentRound;
+        }
+
+        function updateRemainingPlayers() {
+            if(gameState.playersAlive <= 5 && gameState.playersAlive > 0) {
+                els.playersInfo.style.display = 'block';
+                const names = gameState.alivePlayers.map(p => p.emoji + ' ' + p.name).join(' • ');
+                els.remainingNames.innerText = names;
+                gsap.from(els.playersInfo, {opacity: 0, y: -10, duration: 0.3});
+            } else {
+                els.playersInfo.style.display = 'none';
             }
         }
 
@@ -195,11 +421,12 @@
                 els.inp.value = '';
                 els.fb.innerText = '';
                 els.inp.focus();
-                navigator.vibrate([50, 50, 50]);
+                navigator.vibrate && navigator.vibrate([50, 50, 50]);
+                
+                gsap.from(els.syl, {scale: 0, rotation: 360, duration: 0.5, ease: 'back.out(2)'});
             } else {
                 views.input.style.display = 'none';
                 views.status.style.display = 'flex';
-                setStatus('👀', 'EN ATTENTE', 'Regarde les autres jouer');
             }
         }
 
@@ -207,40 +434,61 @@
             els.statIcon.innerText = icon;
             els.statText.innerText = title;
             els.statSub.innerText = sub;
+            
+            gsap.from(els.statIcon, {scale: 0, rotation: 180, duration: 0.4, ease: 'back.out(2)'});
         }
 
         function startTimerAnim(duration) {
             els.timer.style.transition = 'none';
             els.timer.style.width = '100%';
-            // Force reflow
+            els.timer.style.background = 'var(--success)';
+            
             void els.timer.offsetWidth; 
-            els.timer.style.transition = `width ${duration}s linear`;
+            
+            els.timer.style.transition = `width ${duration}s linear, background ${duration}s linear`;
             els.timer.style.width = '0%';
+            
+            setTimeout(() => {
+                els.timer.style.background = 'var(--warning)';
+            }, duration * 500);
+            
+            setTimeout(() => {
+                els.timer.style.background = 'var(--danger)';
+            }, duration * 750);
         }
+
         function stopTimerAnim() {
             els.timer.style.transition = 'none';
             els.timer.style.width = '0%';
         }
 
-        // INPUT HANDLER
         els.inp.addEventListener('keydown', (e) => {
-            if(e.key === 'Enter') {
+            if(e.key === 'Enter' && els.inp.value.trim()) {
                 conn.send({type: 'WORD', word: els.inp.value});
             }
         });
 
-        // PING UI
         let pingVisible = false;
         function updatePing(ms) {
             els.pingVal.innerText = ms;
             if(ms > 150) els.pingPill.classList.add('bad');
             else els.pingPill.classList.remove('bad');
         }
+
         function togglePing() {
             pingVisible = !pingVisible;
             els.pingPill.style.opacity = pingVisible ? '1' : '0.5';
         }
 
+        function getPingColor(ms) {
+            if(ms < 50) return 'var(--success)';
+            if(ms < 150) return 'var(--warning)';
+            return 'var(--danger)';
+        }
+
+        initPickers();
+        
+        gsap.from('.card', {opacity: 0, y: 30, duration: 0.6, ease: 'power3.out'});
     </script>
 </body>
 </html>
