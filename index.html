@@ -175,15 +175,32 @@ h1, h2, h3 {
 }
 
 .screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100vh;
     display: none;
-    min-height: 100vh;
     opacity: 0;
-    transition: opacity 0.4s ease-in-out;
+    z-index: 10;
+    transition: opacity 0.6s ease-in-out;
+    overflow-y: auto;
 }
 
 .screen.active {
-    display: block;
-    animation: fadeIn 0.4s forwards;
+    display: flex;
+    animation: fadeInOverlay 0.6s forwards;
+}
+
+@keyframes fadeInOverlay {
+    0% {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
 }
 
 @keyframes fadeIn {
@@ -585,7 +602,15 @@ h1, h2, h3 {
 
 @keyframes bounce {
     0%, 100% { transform: translateX(0); }
-    50% { transform: translateX(-5px); }
+    50% { transform: translateX(-8px); }
+}
+
+/* Animation ralentie pour meilleure visibilité */
+.arrow {
+    position: absolute;
+    left: -25px;
+    font-size: 20px;
+    animation: bounce 1.2s ease-in-out infinite;
 }
 
 .arena {
@@ -1038,6 +1063,11 @@ h1, h2, h3 {
     50% { opacity: 1; }
 }
     </style>
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#6b7280">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <script src="dictionary.js" defer></script>
 </head>
 <body>
 
@@ -1333,6 +1363,20 @@ h1, h2, h3 {
 
 <script>
 // ==================== ÉTAT GLOBAL ET CONFIGURATION ====================
+
+// Enregistrement du Service Worker pour PWA
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/service-worker.js')
+            .then(registration => {
+                console.log('✅ Service Worker enregistré:', registration.scope);
+            })
+            .catch(error => {
+                console.log('❌ Erreur Service Worker:', error);
+            });
+    });
+}
+
 const Game = {
     state: {
         user: '',
@@ -1360,13 +1404,12 @@ const Game = {
         medium: ['AN', 'EN', 'IN', 'ON', 'UN', 'OU', 'OI', 'AI', 'AU', 'EU', 'IL', 'AR', 'ER', 'IR', 'OR', 'UR', 'CH', 'PH', 'QU', 'TR', 'BR', 'CR', 'DR', 'FR', 'GR', 'PR', 'BL', 'CL', 'FL', 'GL', 'PL'],
         hard: ['TION', 'MENT', 'ABLE', 'ANCE', 'ENCE', 'ESSE', 'ETTE', 'ISME', 'ISTE', 'EUR', 'AGE', 'OIRE', 'IEUX']
     },
-    
     // Thèmes pour le mode thématique
     themes: {
-        animaux: ['CHAT', 'CHIEN', 'LION', 'TIGRE', 'ELEPHANT', 'GIRAFE', 'ZEBRE', 'SINGE', 'OURS', 'LOUP', 'AIGLE', 'SERPENT'],
-        pays: ['FRANCE', 'ESPAGNE', 'ITALIE', 'ALLEMAGNE', 'JAPON', 'CHINE', 'BRESIL', 'CANADA', 'AUSTRALIE', 'MEXIQUE'],
-        objets: ['TABLE', 'CHAISE', 'LAMPE', 'TELEPHONE', 'ORDINATEUR', 'LIVRE', 'STYLO', 'CISEAUX', 'MARTEAU'],
-        nourriture: ['PAIN', 'FROMAGE', 'POMME', 'BANANE', 'PIZZA', 'PATES', 'SALADE', 'GATEAU', 'CHOCOLAT']
+        animaux: ['CHAT', 'CHIEN', 'LION', 'TIGRE', 'ELEPHANT', 'GIRAFE', 'ZEBRE', 'SINGE', 'OURS', 'LOUP', 'AIGLE', 'SERPENT', 'RENARD', 'LAPIN', 'SOURIS', 'POULE', 'CANARD', 'VACHE', 'COCHON', 'MOUTON'],
+        pays: ['FRANCE', 'ESPAGNE', 'ITALIE', 'ALLEMAGNE', 'JAPON', 'CHINE', 'BRESIL', 'CANADA', 'AUSTRALIE', 'MEXIQUE', 'RUSSIE', 'INDE', 'EGYPTE', 'GRECE', 'PORTUGAL'],
+        objets: ['TABLE', 'CHAISE', 'LAMPE', 'TELEPHONE', 'ORDINATEUR', 'LIVRE', 'STYLO', 'CISEAUX', 'MARTEAU', 'COUTEAU', 'FOURCHETTE', 'CUILLERE', 'ASSIETTE', 'VERRE'],
+        nourriture: ['PAIN', 'FROMAGE', 'POMME', 'BANANE', 'PIZZA', 'PATES', 'SALADE', 'GATEAU', 'CHOCOLAT', 'ORANGE', 'FRAISE', 'CERISE', 'RAISIN', 'TOMATE']
     },
     
     // ==================== INITIALISATION ====================
@@ -1488,7 +1531,7 @@ const Game = {
                 if (!line) continue;
                 
                 const cols = line.split('\t');
-                if (cols.length > 0) {
+                if (columns.length > 0) {
                     const word = cols[0].toUpperCase().trim();
                     // Validation stricte : mots de 3+ lettres, lettres françaises uniquement
                     if (word.length >= 3 && /^[A-ZÀÂÄÆÇÉÈÊËÏÎÔŒÙÛÜ]+$/.test(word)) {
@@ -2014,7 +2057,10 @@ const Game = {
         
         // Récupérer le thème si mode thématique
         if (this.state.game.config.mode === 'thematic') {
-            this.state.game.config.theme = document.getElementById('theme-select').value;
+            const themeSelect = document.getElementById('theme-select');
+            if (themeSelect) {
+                this.state.game.config.theme = themeSelect.value;
+            }
         }
         
         // Initialiser les joueurs

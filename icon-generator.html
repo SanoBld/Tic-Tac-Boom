@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>💣 Générateur d'icônes - Tic Tac Boom</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0a0c14;
+            color: #e8ecf5;
+            padding: 40px 20px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .container {
+            max-width: 900px;
+            width: 100%;
+        }
+        
+        h1 {
+            text-align: center;
+            margin-bottom: 40px;
+            font-size: 36px;
+        }
+        
+        .info {
+            background: #181b28;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .canvas-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+        
+        .icon-card {
+            background: #181b28;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        canvas {
+            width: 100%;
+            height: auto;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            background: white;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #6b7280, #4b5563);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(107, 114, 128, 0.4);
+        }
+        
+        .size-label {
+            font-size: 14px;
+            color: #8a92a6;
+            margin-bottom: 10px;
+        }
+        
+        .btn-download-all {
+            width: 100%;
+            padding: 15px;
+            font-size: 16px;
+            margin-top: 30px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>💣 Générateur d'icônes Tic Tac Boom</h1>
+        
+        <div class="info">
+            <p><strong>Instructions :</strong></p>
+            <ol style="margin-left: 20px; margin-top: 10px;">
+                <li>Cliquez sur "Télécharger" sous chaque icône</li>
+                <li>Sauvegardez les images avec les noms exacts (icon-72.png, icon-96.png, etc.)</li>
+                <li>Placez toutes les icônes dans le même dossier que index.html</li>
+                <li>L'application sera alors installable !</li>
+            </ol>
+        </div>
+        
+        <div class="canvas-container" id="icons"></div>
+        
+        <button class="btn btn-download-all" onclick="downloadAll()">
+            📦 Télécharger toutes les icônes (ZIP)
+        </button>
+    </div>
+    
+    <script>
+        const sizes = [72, 96, 128, 144, 152, 192, 384, 512];
+        const canvases = {};
+        
+        // Créer toutes les icônes
+        sizes.forEach(size => {
+            const card = document.createElement('div');
+            card.className = 'icon-card';
+            
+            const label = document.createElement('div');
+            label.className = 'size-label';
+            label.textContent = `${size}x${size}px`;
+            
+            const canvas = document.createElement('canvas');
+            canvas.width = size;
+            canvas.height = size;
+            canvases[size] = canvas;
+            
+            const btn = document.createElement('button');
+            btn.className = 'btn';
+            btn.textContent = 'Télécharger';
+            btn.onclick = () => downloadIcon(size);
+            
+            card.appendChild(label);
+            card.appendChild(canvas);
+            card.appendChild(btn);
+            
+            document.getElementById('icons').appendChild(card);
+            
+            // Dessiner l'icône
+            drawIcon(canvas, size);
+        });
+        
+        function drawIcon(canvas, size) {
+            const ctx = canvas.getContext('2d');
+            
+            // Fond dégradé
+            const gradient = ctx.createLinearGradient(0, 0, size, size);
+            gradient.addColorStop(0, '#6b7280');
+            gradient.addColorStop(1, '#4b5563');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, size, size);
+            
+            // Emoji bombe (centré)
+            ctx.font = `${size * 0.7}px Arial`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('💣', size / 2, size / 2);
+        }
+        
+        function downloadIcon(size) {
+            const canvas = canvases[size];
+            const link = document.createElement('a');
+            link.download = `icon-${size}.png`;
+            link.href = canvas.toDataURL();
+            link.click();
+        }
+        
+        async function downloadAll() {
+            alert('Téléchargez chaque icône individuellement en cliquant sur "Télécharger".\n\nPour créer un ZIP, utilisez 7-Zip ou WinRAR sur Windows, ou la compression intégrée sur Mac.');
+        }
+    </script>
+</body>
+</html>
