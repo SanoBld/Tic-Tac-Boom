@@ -2,386 +2,422 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>HOST - Word Bomb</title>
+    <title>HÔTE - Word Bomb 2.0</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     <script src="dictionary.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/howler/2.2.3/howler.min.js"></script>
 </head>
 <body>
-    <div class="header-info">
-        <div class="room-badge">CODE: <span id="room-code" style="color:white; font-weight:900;">...</span></div>
-        <div id="player-count">0 JOUEURS</div>
-    </div>
-
-    <div class="container" id="main-container">
-        
-        <div id="lobby-panel" class="card">
-            <h2>CONFIGURATION</h2>
+    <div class="container" style="max-width: 100%; padding: 0;">
+        <div class="dashboard">
             
-            <div style="text-align: left; margin: 20px 0;">
-                <label style="display:block; margin-bottom:5px; color:var(--text-muted); font-size:0.9rem;">VIES PAR JOUEUR : <span id="disp-lives" style="color:white">2</span></label>
-                <input type="range" min="1" max="10" value="2" style="width:100%; accent-color:var(--primary)" oninput="settings.lives = parseInt(this.value); document.getElementById('disp-lives').innerText=this.value">
-                
-                <label style="display:block; margin-top:15px; margin-bottom:5px; color:var(--text-muted); font-size:0.9rem;">CHRONO INITIAL : <span id="disp-time" style="color:white">20s</span></label>
-                <input type="range" min="5" max="60" value="20" style="width:100%; accent-color:var(--accent)" oninput="settings.startTime = parseInt(this.value); document.getElementById('disp-time').innerText=this.value + 's'">
-
-                <div style="margin-top: 20px; background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px; display: flex; align-items: center; justify-content: space-between;">
-                    <span style="font-size: 0.9rem;">🎮 L'Hôte participe ?</span>
-                    <input type="checkbox" id="host-plays-check" style="width: 20px; height: 20px; accent-color: var(--success);">
+            <div class="panel-side">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <h3 style="margin:0">ROOM: <span id="room-code" class="mono" style="color:var(--accent)">...</span></h3>
                 </div>
-            </div>
+                <hr style="border:0; border-top:1px solid var(--glass-border); width:100%;">
 
-            <div id="dict-status" style="color: var(--text-muted); font-size: 0.8rem; margin-bottom: 10px;">Chargement dictionnaire...</div>
-            <button class="btn" id="start-btn" onclick="launchGame()" disabled>LANCER LA PARTIE</button>
-        </div>
-
-        <div id="game-ui" style="display:none; width: 100%; flex-direction: column; align-items: center;">
-            
-            <h3 id="turn-info" style="opacity: 0.7; letter-spacing: 2px;">EN ATTENTE</h3>
-            
-            <div class="syllable-display" id="syllable" data-text="---">---</div>
-            
-            <div class="timer-wrap">
-                <div class="timer-text" id="timer-text">0.0s</div>
-                <div class="timer-bar" id="timer-bar"></div>
-            </div>
-
-            <div class="grid-wrapper">
-                <div class="grid" id="players-grid">
+                <div id="config-panel">
+                    <h4 style="margin:10px 0; color:var(--primary-light)">PARAMÈTRES</h4>
+                    
+                    <div class="setting-row">
+                        <span>Vies (<span id="lbl-lives">2</span>)</span>
+                        <input type="range" min="1" max="5" value="2" oninput="updateSettings('lives', this.value)">
                     </div>
+                    
+                    <div class="setting-row" style="margin-top:10px">
+                        <span>Temps (<span id="lbl-time">20</span>s)</span>
+                        <input type="range" min="5" max="60" value="20" oninput="updateSettings('startTime', this.value)">
+                    </div>
+
+                    <div class="setting-row" style="margin-top:15px">
+                        <span>Hôte Joue ?</span>
+                        <label class="switch">
+                            <input type="checkbox" id="host-plays-check">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <hr style="border:0; border-top:1px solid var(--glass-border); width:100%;">
+                
+                <div style="flex:1; overflow:hidden; display:flex; flex-direction:column;">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                        <span>JOUEURS (<span id="p-count">0</span>)</span>
+                        <span style="font-size:0.8rem; opacity:0.5">PING</span>
+                    </div>
+                    <div id="lobby-list" style="flex:1; overflow-y:auto; font-size:0.9rem;">
+                        </div>
+                </div>
+
+                <button class="btn success" id="start-btn" onclick="startGame()" disabled>LANCER LA PARTIE</button>
+            </div>
+
+            <div class="panel-main">
+                
+                <div id="wait-screen" style="text-align:center;">
+                    <h2>EN ATTENTE DE JOUEURS...</h2>
+                    <p style="color:var(--text-muted)">Connectez-vous avec le code à gauche</p>
+                </div>
+
+                <div id="game-screen" style="display:none; width:100%; height:100%; flex-direction:column; align-items:center; justify-content:center;">
+                    
+                    <h2 id="turn-indicator" style="letter-spacing: 2px; color: var(--primary-light)">TOUR DE...</h2>
+                    
+                    <div class="syllable-box" id="syllable-display">---</div>
+
+                    <div class="timer-track">
+                        <div class="timer-fill" id="timer-bar"></div>
+                    </div>
+
+                    <div class="grid-container" id="game-grid"></div>
+                </div>
+
+                <div id="host-input-overlay" style="position:absolute; bottom:20px; background:var(--bg-dark); padding:15px; border-radius:12px; border:1px solid var(--primary); display:none; gap:10px; box-shadow: 0 -10px 40px rgba(0,0,0,0.5);">
+                    <input type="text" id="host-word" placeholder="Taper mot..." autocomplete="off">
+                    <button class="btn" style="width:auto;" onclick="hostSubmit()">OK</button>
+                </div>
+
             </div>
         </div>
-    </div>
-
-    <div id="host-input-area">
-        <input type="text" id="host-word-input" placeholder="Votre mot..." style="max-width: 300px; margin: 0;" autocomplete="off">
-        <button class="btn" style="width: auto; margin: 0;" onclick="hostSubmit()">OK</button>
     </div>
 
     <script>
-        // --- ETAT GLOBAL ---
-        const settings = { lives: 2, startTime: 20 };
-        const STATE = { LOBBY: 0, PLAYING: 1, END: 2 };
-        let currentState = STATE.LOBBY;
-        
-        // Données jeu
-        let dictionary = new Set();
-        let usedWords = new Set();
-        let players = {}; // id -> {name, emoji, lives, alive, conn}
-        let turnQueue = [];
-        let currentTurnIdx = 0;
-        let currentSyllable = "";
-        
-        // Timers
-        let gameTimer;
-        let timeLeft = 0;
-        let maxTime = 0;
-        let broadcastInterval;
-
-        // PeerJS
+        // --- LOGIQUE HÔTE ---
         const ROOM_ID = Math.random().toString(36).substring(2, 6).toUpperCase();
         document.getElementById('room-code').innerText = ROOM_ID;
-        const peer = new Peer("WB-HOST-" + ROOM_ID);
 
-        // --- INITIALISATION ---
+        // Configuration
+        let settings = { lives: 2, startTime: 20 };
+        let state = {
+            status: 'LOBBY', // LOBBY, PLAYING, END
+            players: {}, // id -> {name, emoji, lives, alive, conn, ping}
+            queue: [],
+            turnIdx: 0,
+            syllable: "",
+            usedWords: new Set(),
+            timeLeft: 0,
+            maxTime: 0
+        };
 
-        // 1. Charger Dictionnaire Local
-        window.addEventListener('dictionaryReady', () => {
-    if(window.DICTIONARY_DATA && window.DICTIONARY_DATA.length > 0) {
-        dictionary = new Set(window.DICTIONARY_DATA);
-        document.getElementById('dict-status').innerText = `✅ ${dictionary.size} mots prêts.`;
-        document.getElementById('dict-status').style.color = "var(--success)";
-        document.getElementById('start-btn').disabled = false;
-    }
-});
+        let timerInt;
+        let pingInt;
 
-        // 2. Gestion Réseau
+        // PeerJS
+        const peer = new Peer("WB2-HOST-" + ROOM_ID);
+        
+        peer.on('open', (id) => console.log('Host Ready:', id));
+        
         peer.on('connection', (conn) => {
             conn.on('open', () => {
-                conn.send({type: 'WELCOME', settings: settings});
+                // Initial Data
+                conn.send({type: 'WELCOME', settings});
                 
                 conn.on('data', (data) => {
-                    if(data.type === 'JOIN') handleJoin(conn.peer, data, conn);
-                    if(data.type === 'WORD') handleWordAttempt(conn.peer, data.word);
-                    if(data.type === 'REACTION') showReaction(data.emoji);
+                    handleData(conn.peer, data, conn);
+                });
+
+                conn.on('close', () => {
+                    if(state.players[conn.peer]) {
+                        delete state.players[conn.peer];
+                        updateLobbyUI();
+                        updateGameGrid(); // Si en jeu
+                    }
                 });
             });
         });
 
-        function handleJoin(id, data, conn) {
-            if(currentState !== STATE.LOBBY) {
-                conn.send({type: 'ERROR', msg: 'Partie en cours'});
-                return;
+        // Gestion des Messages
+        function handleData(id, data, conn) {
+            // JOIN
+            if(data.type === 'JOIN') {
+                if(state.status !== 'LOBBY') {
+                    conn.send({type: 'ERROR', msg: 'Partie en cours'});
+                    return;
+                }
+                state.players[id] = {
+                    id, name: data.name.substring(0, 12), emoji: data.emoji,
+                    lives: settings.lives, alive: true, conn, ping: 0, isHost: false
+                };
+                updateLobbyUI();
             }
-            players[id] = {
-                id: id,
-                name: data.name.substring(0,10),
-                emoji: data.emoji,
-                lives: settings.lives,
-                alive: true,
-                conn: conn, // null si c'est l'hôte
-                isHost: false
-            };
-            renderGrid();
-            updateCounts();
+
+            // PONG (Latence)
+            if(data.type === 'PONG') {
+                const now = Date.now();
+                const latency = now - data.ts;
+                if(state.players[id]) state.players[id].ping = latency;
+                updatePingUI(id); // Optimisation: update seulement le texte du ping
+            }
+
+            // WORD ATTEMPT
+            if(data.type === 'WORD') {
+                processWord(id, data.word);
+            }
         }
 
-        // --- BOUCLE DE JEU ---
+        // --- GAME LOOP ---
 
-        function launchGame() {
-            // Ajouter l'hôte comme joueur si demandé
+        function startGame() {
+            // Ajouter Host si coché
             const hostPlays = document.getElementById('host-plays-check').checked;
             if(hostPlays) {
-                players['HOST'] = {
-                    id: 'HOST', name: 'HÔTE', emoji: '👑',
-                    lives: settings.lives, alive: true,
-                    conn: null, isHost: true
+                state.players['HOST'] = {
+                    id: 'HOST', name: 'HÔTE (Moi)', emoji: '👑',
+                    lives: settings.lives, alive: true, conn: null, ping: 0, isHost: true
                 };
-                document.getElementById('host-input-area').classList.add('visible');
-                // Focus input hôte
-                document.getElementById('host-word-input').addEventListener('keydown', (e) => {
+                document.getElementById('host-input-overlay').style.display = 'flex';
+                document.getElementById('host-word').addEventListener('keydown', e => {
                     if(e.key === 'Enter') hostSubmit();
                 });
             }
 
-            if(Object.keys(players).length < 2 && !hostPlays) {
-               // En mode dev, on peut commenter ça, mais mieux vaut 2 joueurs
-               // return alert("Il faut au moins 2 joueurs !"); 
-            }
+            if(Object.keys(state.players).length < 2 && !hostPlays) return alert("Pas assez de joueurs !");
 
-            currentState = STATE.PLAYING;
-            usedWords.clear();
-            turnQueue = Object.keys(players); // Mélanger si besoin
+            state.status = 'PLAYING';
+            state.queue = Object.keys(state.players); // Shuffle possible ici
+            state.usedWords.clear();
             
             // UI Switch
-            document.getElementById('lobby-panel').style.display = 'none';
-            document.getElementById('game-ui').style.display = 'flex';
-            
-            broadcast({type: 'GAME_START'});
-            renderGrid();
+            document.getElementById('start-btn').disabled = true;
+            document.getElementById('wait-screen').style.display = 'none';
+            document.getElementById('game-screen').style.display = 'flex';
+            document.getElementById('config-panel').style.opacity = '0.5';
+            document.getElementById('config-panel').style.pointerEvents = 'none';
 
-            // Boucle de sync (envoie temps + info active player toutes les 200ms)
-            broadcastInterval = setInterval(syncClients, 200);
+            broadcast({type: 'GAME_START', players: cleanPlayerList()});
+            updateGameGrid();
 
+            startPingLoop(); // Commence à mesurer la latence
             nextTurn();
         }
 
         function nextTurn() {
-            // Trouver le prochain vivant
+            // Trouver le prochain joueur vivant
             let loops = 0;
             do {
-                currentTurnIdx = (currentTurnIdx + 1) % turnQueue.length;
+                state.turnIdx = (state.turnIdx + 1) % state.queue.length;
                 loops++;
-            } while (!players[turnQueue[currentTurnIdx]].alive && loops < turnQueue.length * 2);
+            } while (!state.players[state.queue[state.turnIdx]].alive && loops < state.queue.length * 2);
 
-            const activePid = turnQueue[currentTurnIdx];
-            const survivors = turnQueue.filter(p => players[p].alive);
+            const activeId = state.queue[state.turnIdx];
+            const survivors = state.queue.filter(p => state.players[p].alive);
 
-            // Condition Victoire
-            if(survivors.length <= 1 && turnQueue.length > 1) {
-                endGame(survivors[0]);
+            // Victoire ?
+            if(survivors.length <= 1 && state.queue.length > 1) {
+                handleWin(survivors[0]);
                 return;
             }
 
             // Setup Tour
-            currentSyllable = generateSyllable();
-            // Le temps diminue au fur et à mesure que les mots sont trouvés (max -50%)
-            maxTime = Math.max(5, settings.startTime * Math.pow(0.98, usedWords.size));
-            timeLeft = maxTime;
+            state.syllable = generateSyllable();
+            state.maxTime = Math.max(3, settings.startTime * Math.pow(0.98, state.usedWords.size));
+            state.timeLeft = state.maxTime;
 
-            // UI Locale
-            updateTurnUI(activePid);
-            
-            // Broadcast "Nouveau Tour" pour eventuels sons/vibrations
-            broadcast({type: 'NEW_TURN', player: activePid, syllable: currentSyllable});
+            // UI
+            updateGameUI(activeId);
+            broadcast({type: 'NEW_TURN', player: activeId, syllable: state.syllable, maxTime: state.maxTime});
 
-            // Input Hôte ?
-            const hostInput = document.getElementById('host-word-input');
-            if(activePid === 'HOST') {
-                hostInput.disabled = false;
-                hostInput.value = '';
-                hostInput.focus();
-                hostInput.style.borderColor = "var(--primary)";
+            // Input Host Focus
+            if(activeId === 'HOST') {
+                document.getElementById('host-word').disabled = false;
+                document.getElementById('host-word').focus();
             } else {
-                hostInput.disabled = true;
-                hostInput.style.borderColor = "#333";
+                document.getElementById('host-word').disabled = true;
             }
 
-            // Lancer Chrono
-            if(gameTimer) clearInterval(gameTimer);
-            gameTimer = setInterval(() => {
-                timeLeft -= 0.1;
-                updateTimerUI();
+            // Timer
+            if(timerInt) clearInterval(timerInt);
+            timerInt = setInterval(() => {
+                state.timeLeft -= 0.1;
+                updateTimerVisual();
                 
-                if(timeLeft <= 0) {
-                    clearInterval(gameTimer);
-                    punishPlayer(activePid);
+                // Sync Timer aux clients toutes les sec (pour recalibrer)
+                if(Math.round(state.timeLeft * 10) % 10 === 0) {
+                     broadcast({type: 'SYNC_TIME', time: state.timeLeft});
+                }
+
+                if(state.timeLeft <= 0) {
+                    clearInterval(timerInt);
+                    punishPlayer(activeId);
                 }
             }, 100);
         }
 
-        // --- LOGIQUE MOTS ---
+        function processWord(pid, wordRaw) {
+            // Vérifications basiques
+            if(state.status !== 'PLAYING') return;
+            if(state.queue[state.turnIdx] !== pid) return;
 
-        function handleWordAttempt(pid, rawWord) {
-            // Sécurité: est-ce son tour ?
-            if(turnQueue[currentTurnIdx] !== pid) return;
-            if(currentState !== STATE.PLAYING) return;
-
-            const word = rawWord.trim().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-
+            const word = wordRaw.trim().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
             let error = null;
-            
-            if(!word.includes(currentSyllable)) error = "Syllabe manquante";
-            else if(usedWords.has(word)) error = "Déjà utilisé";
-            else if(!dictionary.has(word)) error = "Pas dans le dico";
+
+            if(!word.includes(state.syllable)) error = `Syllabe "${state.syllable}" manquante !`;
+            else if(state.usedWords.has(word)) error = "Déjà utilisé !";
+            else if(!window.DICTIONARY.has(word)) error = "Inconnu au bataillon";
 
             if(error) {
-                // Feedback Négatif
                 sendTo(pid, {type: 'FEEDBACK', valid: false, msg: error});
-                shakeUI();
+                gsap.to(".syllable-box", {x:10, yoyo:true, repeat:3, duration:0.05});
             } else {
-                // Feedback Positif + Tour Suivant
-                clearInterval(gameTimer);
-                usedWords.add(word);
+                // Success
+                clearInterval(timerInt);
+                state.usedWords.add(word);
                 sendTo(pid, {type: 'FEEDBACK', valid: true});
+                gsap.to("#syllable-display", {scale:1.4, yoyo:true, repeat:1, duration:0.1});
                 
-                // Petite anim victoire
-                gsap.to("#syllable", {scale: 1.2, duration: 0.1, yoyo: true, repeat: 1});
-                
-                setTimeout(nextTurn, 500);
+                setTimeout(nextTurn, 500); // Petit délai pour voir la validation
             }
-        }
-
-        function hostSubmit() {
-            const input = document.getElementById('host-word-input');
-            handleWordAttempt('HOST', input.value);
-            input.value = ''; // clean pour UX
         }
 
         function punishPlayer(pid) {
-            players[pid].lives--;
-            shakeUI(true); // Grosse secousse
+            const p = state.players[pid];
+            p.lives--;
+            broadcast({type: 'HIT', player: pid, lives: p.lives});
             
-            if(players[pid].lives <= 0) {
-                players[pid].alive = false;
-                sendTo(pid, {type: 'ELIMINATED'});
-            } else {
-                sendTo(pid, {type: 'HIT', lives: players[pid].lives});
+            if(p.lives <= 0) {
+                p.alive = false;
+                broadcast({type: 'ELIMINATED', player: pid});
             }
-            
-            renderGrid();
+
+            updateGameGrid();
             setTimeout(nextTurn, 1500);
         }
 
-        function endGame(winnerId) {
-            clearInterval(gameTimer);
-            clearInterval(broadcastInterval);
-            currentState = STATE.END;
-
-            const wName = winnerId ? players[winnerId].name : "PERSONNE";
-            document.getElementById('turn-info').innerText = "VICTOIRE";
-            document.getElementById('syllable').innerText = "🏆";
-            document.getElementById('syllable').setAttribute('data-text', '🏆');
+        function handleWin(winnerId) {
+            clearInterval(timerInt);
+            clearInterval(pingInt);
+            state.status = 'END';
+            
+            const wName = winnerId ? state.players[winnerId].name : "PERSONNE";
+            document.getElementById('syllable-display').innerText = "🏆";
+            document.getElementById('turn-indicator').innerText = "VICTOIRE DE " + wName;
             
             broadcast({type: 'GAME_OVER', winner: wName});
-            
-            // Reload auto après 10s
-            setTimeout(() => location.reload(), 10000);
         }
 
-        // --- UTILS & RENDERING ---
-
+        // --- UTILS ---
         function generateSyllable() {
-            // Simple pour l'exemple. 
-            const syls = ["AR", "BO", "CH", "DI", "EN", "FR", "GR", "JU", "KI", "LI", "MA", "NO", "ON", "PA", "QU", "RE", "SI", "TI", "UR", "VI", "WA"];
+            const syls = ["AR", "BO", "CH", "DI", "EN", "FR", "GR", "JU", "KI", "LI", "MA", "NO", "ON", "PA", "QU", "RE", "SI", "TI", "UR", "VI", "WA", "TER", "PRO", "CON"];
             return syls[Math.floor(Math.random() * syls.length)];
         }
 
-        function updateTurnUI(pid) {
-            const p = players[pid];
-            document.getElementById('turn-info').innerText = `TOUR DE ${p.name.toUpperCase()}`;
-            const sEl = document.getElementById('syllable');
-            sEl.innerText = currentSyllable;
-            sEl.setAttribute('data-text', currentSyllable);
+        function hostSubmit() {
+            const el = document.getElementById('host-word');
+            processWord('HOST', el.value);
+            el.value = '';
+        }
+
+        // --- UPDATE UI ---
+        function updateSettings(key, val) {
+            settings[key] = parseInt(val);
+            if(key === 'lives') document.getElementById('lbl-lives').innerText = val;
+            if(key === 'startTime') document.getElementById('lbl-time').innerText = val;
             
-            // Highlight grille
-            renderGrid();
+            // Envoyer maj aux clients dans le lobby
+            if(state.status === 'LOBBY') broadcast({type: 'SETTINGS_UPDATE', settings});
         }
 
-        function updateTimerUI() {
-            const pct = Math.max(0, (timeLeft / maxTime) * 100);
-            document.getElementById('timer-bar').style.width = pct + "%";
-            document.getElementById('timer-text').innerText = Math.ceil(timeLeft) + "s";
-        }
-
-        function renderGrid() {
-            const container = document.getElementById('players-grid');
-            container.innerHTML = "";
-            const activeId = currentState === STATE.PLAYING ? turnQueue[currentTurnIdx] : null;
-
-            turnQueue.forEach(pid => {
-                const p = players[pid];
-                // Ne pas afficher si déconnecté avant start (optionnel)
-                
+        function updateLobbyUI() {
+            const list = document.getElementById('lobby-list');
+            list.innerHTML = "";
+            let count = 0;
+            
+            Object.values(state.players).forEach(p => {
+                if(p.isHost) return; // Pas afficher l'hôte dans la liste d'attente
+                count++;
                 const div = document.createElement('div');
-                div.className = `p-card ${p.alive ? '' : 'is-dead'} ${pid === activeId ? 'is-active' : ''}`;
-                
-                let hearts = "❤️".repeat(p.lives);
-                if(!p.alive) hearts = "💀";
-
+                div.style.padding = "8px";
+                div.style.borderBottom = "1px solid rgba(255,255,255,0.05)";
+                div.style.display = "flex"; div.style.justifyContent = "space-between";
                 div.innerHTML = `
+                    <span>${p.emoji} ${p.name}</span>
+                    <span id="ping-${p.id}" class="mono" style="color:${getPingColor(p.ping)}">${p.ping}ms</span>
+                `;
+                list.appendChild(div);
+            });
+            document.getElementById('p-count').innerText = count;
+            document.getElementById('start-btn').disabled = count < 1 && !document.getElementById('host-plays-check').checked;
+        }
+
+        function updatePingUI(id) {
+            const el = document.getElementById(`ping-${id}`);
+            if(el) {
+                el.innerText = state.players[id].ping + "ms";
+                el.style.color = getPingColor(state.players[id].ping);
+            }
+        }
+
+        function updateGameGrid() {
+            const grid = document.getElementById('game-grid');
+            grid.innerHTML = "";
+            state.queue.forEach(pid => {
+                const p = state.players[pid];
+                const div = document.createElement('div');
+                div.className = `player-card ${!p.alive ? 'eliminated' : ''}`;
+                div.id = `card-${pid}`;
+                div.innerHTML = `
+                    <div class="p-ping" style="color:${getPingColor(p.ping)}">${p.isHost ? 'H' : p.ping + 'ms'}</div>
                     <div class="p-avatar">${p.emoji}</div>
                     <div class="p-name">${p.name}</div>
-                    <div class="p-lives">${hearts}</div>
+                    <div class="p-lives">${"❤️".repeat(p.lives)}</div>
                 `;
-                container.appendChild(div);
+                grid.appendChild(div);
             });
         }
 
-        function updateCounts() {
-            document.getElementById('player-count').innerText = Object.keys(players).length + " JOUEURS";
+        function updateGameUI(activePid) {
+            document.getElementById('syllable-display').innerText = state.syllable;
+            const pName = state.players[activePid].name;
+            document.getElementById('turn-indicator').innerText = `TOUR DE ${pName}`;
+            
+            // Highlight active card
+            document.querySelectorAll('.player-card').forEach(c => c.classList.remove('active'));
+            const c = document.getElementById(`card-${activePid}`);
+            if(c) c.classList.add('active');
         }
 
-        function shakeUI(hard = false) {
-            const intensity = hard ? 20 : 5;
-            gsap.fromTo("#main-container", {x:-intensity}, {x:intensity, duration:0.05, repeat:5, yoyo:true});
+        function updateTimerVisual() {
+            const pct = Math.max(0, (state.timeLeft / state.maxTime) * 100);
+            document.getElementById('timer-bar').style.width = pct + "%";
         }
 
-        function showReaction(emoji) {
-            const el = document.createElement('div');
-            el.innerText = emoji;
-            el.className = 'float-emoji';
-            el.style.left = (10 + Math.random()*80) + "%";
-            el.style.top = "80%";
-            document.body.appendChild(el);
-            setTimeout(()=>el.remove(), 2600);
+        function getPingColor(ms) {
+            if(ms < 50) return "var(--success)";
+            if(ms < 150) return "var(--warning)";
+            return "var(--danger)";
         }
 
-        // --- NETWORKING HELPERS ---
+        // --- NETWORKING ---
         function sendTo(pid, msg) {
-            if(pid === 'HOST') return; // Rien à envoyer réseau, c'est local
-            if(players[pid] && players[pid].conn) players[pid].conn.send(msg);
+            if(pid === 'HOST') return;
+            const p = state.players[pid];
+            if(p && p.conn) p.conn.send(msg);
         }
 
         function broadcast(msg) {
-            Object.values(players).forEach(p => {
+            Object.values(state.players).forEach(p => {
                 if(!p.isHost && p.conn) p.conn.send(msg);
             });
         }
-        
-        // Fonction critique : synchroniser l'état vers les mobiles
-        function syncClients() {
-            if(currentState !== STATE.PLAYING) return;
-            const data = {
-                type: 'SYNC',
-                time: Math.ceil(timeLeft),
-                maxTime: maxTime,
-                activePlayerId: turnQueue[currentTurnIdx],
-                count: Object.keys(players).length
-            };
-            broadcast(data);
+
+        function cleanPlayerList() {
+            // Envoie une liste légère aux clients pour affichage
+            return Object.values(state.players).map(p => ({
+                id: p.id, name: p.name, emoji: p.emoji, lives: p.lives, alive: p.alive
+            }));
         }
+
+        // Boucle Ping : Envoie un timestamp à tous, ils répondent, on calcule le RTT
+        function startPingLoop() {
+            pingInt = setInterval(() => {
+                const now = Date.now();
+                broadcast({type: 'PING', ts: now});
+            }, 2000); // Toutes les 2s
+        }
+
     </script>
 </body>
 </html>

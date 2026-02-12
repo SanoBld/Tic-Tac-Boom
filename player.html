@@ -3,193 +3,244 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>MANETTE - Word Bomb</title>
+    <title>JOUEUR - Word Bomb</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
 </head>
 <body>
-    <div class="container mobile-layout" style="padding: 15px;">
+    <div class="container mobile-wrapper">
         
-        <div id="login-view" class="card" style="width:100%">
+        <div id="login-view" class="card" style="width:100%; margin:auto;">
             <h2>CONNEXION</h2>
-            <input type="text" id="room-code" placeholder="CODE (ex: ABCD)" style="text-transform:uppercase">
-            <input type="text" id="p-name" placeholder="PSEUDO" maxlength="10">
-            <div style="display:flex; gap:10px;">
-                <input type="text" id="p-emoji" value="👽" style="width:60px; flex:none;">
-                <button class="btn" onclick="joinGame()">GO !</button>
+            <input type="text" id="room-code" placeholder="CODE SALLE (ex: ABCD)" style="text-transform:uppercase; margin-bottom:10px;">
+            <input type="text" id="p-name" placeholder="VOTRE PSEUDO" maxlength="12" style="margin-bottom:10px;">
+            <div style="display:flex; gap:10px; margin-bottom:20px;">
+                <input type="text" id="p-emoji" value="😎" style="width:60px; flex:none;">
+                <button class="btn" onclick="joinGame()">REJOINDRE</button>
             </div>
+            <p id="conn-status" style="font-size:0.8rem; color:var(--text-muted)"></p>
         </div>
 
         <div id="game-view" style="display:none; width:100%; height:100%; flex-direction:column;">
             
-            <div style="display:flex; justify-content:space-between; color:var(--text-muted); font-size:0.8rem; margin-bottom:10px;">
-                <span id="player-total">0 JOUEURS</span>
-                <span id="timer-display">-- s</span>
+            <div class="mobile-header">
+                <div class="latency-pill" id="ping-display" onclick="togglePing()" style="cursor:pointer; opacity:0.5">
+                    <span style="font-size:10px">📶</span> <span id="ping-val">--</span>ms
+                </div>
+                <div style="font-weight:bold" id="lives-display">❤️❤️</div>
             </div>
 
-            <div style="width:100%; height:6px; background:#111; border-radius:3px; overflow:hidden; margin-bottom:20px;">
-                <div id="mobile-timer-bar" style="width:100%; height:100%; background:var(--accent); transition: width 0.2s linear;"></div>
-            </div>
-
-            <div style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center;">
-                
-                <div id="status-icon" class="status-indicator">⏳</div>
+            <div class="mobile-status" id="status-area">
+                <div style="font-size:3rem; margin-bottom:10px;" id="status-icon">⏳</div>
                 <h2 id="status-text">EN ATTENTE</h2>
-                <div id="my-lives" style="letter-spacing:4px; margin:10px 0;">❤️❤️</div>
-                
-                <div id="input-zone" style="width:100%; display:none; margin-top:20px;">
-                    <div style="font-size:0.9rem; opacity:0.7">SYLLABE</div>
-                    <div id="syl-display" style="font-size:3rem; font-weight:900; color:var(--primary-light); margin-bottom:10px;">---</div>
-                    
-                    <input type="text" id="word-input" placeholder="Taper mot..." autocomplete="off" style="border-color:var(--primary)">
-                    <div id="feedback" style="height:20px; color:var(--danger); font-weight:bold; margin-top:5px;"></div>
+                <p style="color:var(--text-muted); font-size:0.9rem" id="status-sub">La partie va commencer...</p>
+            </div>
+
+            <div id="input-area" style="display:none; flex-direction:column; width:100%; margin-bottom:20px;">
+                <div style="text-align:center; margin-bottom:10px;">
+                    <span style="color:var(--text-muted); font-size:0.8rem;">SYLLABE</span>
+                    <div id="syl-text" style="font-size:3rem; font-weight:800; color:var(--text-main);">---</div>
                 </div>
 
+                <div style="width:100%; height:6px; background:#333; border-radius:3px; overflow:hidden; margin-bottom:15px;">
+                    <div id="timer-bar" style="width:100%; height:100%; background:var(--primary);"></div>
+                </div>
+
+                <input type="text" id="word-input" placeholder="Votre mot..." autocomplete="off" style="font-size:1.3rem; padding:18px;">
+                <div id="feedback-text" style="height:20px; color:var(--danger); text-align:center; font-weight:bold; margin-top:5px;"></div>
             </div>
 
-            <div class="reaction-bar">
-                <button class="r-btn" onclick="react('🔥')">🔥</button>
-                <button class="r-btn" onclick="react('😂')">😂</button>
-                <button class="r-btn" onclick="react('😱')">😱</button>
-                <button class="r-btn" onclick="react('💩')">💩</button>
-            </div>
+            <div style="height: 20px;"></div>
+
         </div>
     </div>
 
     <script>
         let peer, conn;
-        let myId = null;
-        const els = {
+        let myId;
+        let pingStart = 0;
+
+        // Elements
+        const views = {
             login: document.getElementById('login-view'),
             game: document.getElementById('game-view'),
-            inputZone: document.getElementById('input-zone'),
-            statusText: document.getElementById('status-text'),
-            statusIcon: document.getElementById('status-icon'),
-            timerBar: document.getElementById('mobile-timer-bar'),
-            timerText: document.getElementById('timer-display'),
-            count: document.getElementById('player-total'),
-            input: document.getElementById('word-input')
+            input: document.getElementById('input-area'),
+            status: document.getElementById('status-area')
+        };
+        const els = {
+            syl: document.getElementById('syl-text'),
+            inp: document.getElementById('word-input'),
+            fb: document.getElementById('feedback-text'),
+            timer: document.getElementById('timer-bar'),
+            lives: document.getElementById('lives-display'),
+            pingVal: document.getElementById('ping-val'),
+            pingPill: document.getElementById('ping-display'),
+            statIcon: document.getElementById('status-icon'),
+            statText: document.getElementById('status-text'),
+            statSub: document.getElementById('status-sub')
         };
 
-        // Restauration pseudo
-        if(localStorage.getItem('wb_p_name')) document.getElementById('p-name').value = localStorage.getItem('wb_p_name');
+        // Restore name
+        if(localStorage.getItem('wb_name')) document.getElementById('p-name').value = localStorage.getItem('wb_name');
 
         function joinGame() {
             const code = document.getElementById('room-code').value.toUpperCase();
-            const name = document.getElementById('p-name').value || "Joueur";
-            const emoji = document.getElementById('p-emoji').value || "🙂";
-            
-            localStorage.setItem('wb_p_name', name);
+            const name = document.getElementById('p-name').value;
+            const emoji = document.getElementById('p-emoji').value;
 
-            if(!code) return alert("Code manquant !");
+            if(!code || !name) return;
+            localStorage.setItem('wb_name', name);
 
-            els.login.innerHTML = "<p>Connexion en cours...</p>";
+            document.getElementById('conn-status').innerText = "Connexion au serveur...";
             
             peer = new Peer();
             peer.on('open', (id) => {
                 myId = id;
-                conn = peer.connect("WB-HOST-" + code);
+                conn = peer.connect("WB2-HOST-" + code);
                 
                 conn.on('open', () => {
-                    els.login.style.display = 'none';
-                    els.game.style.display = 'flex';
+                    views.login.style.display = 'none';
+                    views.game.style.display = 'flex';
                     conn.send({type: 'JOIN', name, emoji});
                 });
 
                 conn.on('data', handleData);
-                conn.on('close', () => alert("Déconnecté !"));
+                
+                conn.on('close', () => {
+                    alert("Déconnecté de l'hôte !");
+                    location.reload();
+                });
+                
+                // Erreur de connexion
+                setTimeout(() => {
+                    if(!conn.open) document.getElementById('conn-status').innerText = "Hôte introuvable. Vérifiez le code.";
+                }, 3000);
             });
         }
 
+        let maxTime = 10;
+        let timerAnim;
+
         function handleData(data) {
-            // SYNC : Mise à jour très fréquente (Timer, Count)
-            if(data.type === 'SYNC') {
-                els.count.innerText = data.count + " JOUEURS";
-                els.timerText.innerText = data.time + "s";
-                const pct = (data.time / data.maxTime) * 100;
-                els.timerBar.style.width = pct + "%";
-                
-                // Coloration barre urgence
-                els.timerBar.style.background = pct < 30 ? "var(--danger)" : "var(--accent)";
-                return;
+            // PING SYSTEM
+            if(data.type === 'PING') {
+                conn.send({type: 'PONG', ts: data.ts});
+                // Calcul local approximatif (Half Trip)
+                const now = Date.now();
+                const lat = Math.floor((now - data.ts) / 2); // Très approximatif car asymétrique, mais ok pour UX
+                updatePing(lat);
             }
 
             if(data.type === 'NEW_TURN') {
-                els.input.value = "";
-                document.getElementById('feedback').innerText = "";
-                document.getElementById('syl-display').innerText = data.syllable;
-
+                els.syl.innerText = data.syllable;
+                maxTime = data.maxTime;
+                
                 if(data.player === myId) {
-                    // C'est mon tour
                     setMyTurn(true);
+                    startTimerAnim(maxTime);
                 } else {
                     setMyTurn(false);
+                    stopTimerAnim();
+                }
+            }
+
+            if(data.type === 'SYNC_TIME') {
+                // Si c'est mon tour, on recale la barre
+                if(views.input.style.display === 'flex') {
+                    // Optionnel: lissage
                 }
             }
 
             if(data.type === 'FEEDBACK') {
-                if(!data.valid) {
-                    document.getElementById('feedback').innerText = data.msg;
-                    els.input.classList.add('shake');
-                    setTimeout(()=>els.input.classList.remove('shake'), 400);
-                    vibrate(100);
+                if(data.valid) {
+                    views.input.style.display = 'none';
+                    views.status.style.display = 'flex';
+                    setStatus('✅', 'VALIDÉ !', 'Bien joué');
+                    stopTimerAnim();
                 } else {
-                    // Validé
-                    els.inputZone.style.display = 'none';
-                    els.statusText.innerText = "VALIDÉ !";
-                    els.statusText.style.color = "var(--success)";
+                    els.fb.innerText = data.msg;
+                    els.inp.classList.add('shake');
+                    setTimeout(() => els.inp.classList.remove('shake'), 400);
+                    navigator.vibrate(200);
                 }
             }
 
             if(data.type === 'HIT') {
-                document.getElementById('my-lives').innerText = "❤️".repeat(data.lives);
-                vibrate([400, 50, 400]);
+                if(data.player === myId) {
+                    els.lives.innerText = "❤️".repeat(data.lives);
+                    navigator.vibrate([100, 50, 100, 50, 500]);
+                    setStatus('💥', 'BOOM !', 'Tu as perdu une vie');
+                }
             }
 
             if(data.type === 'ELIMINATED') {
-                document.getElementById('my-lives').innerText = "💀";
-                els.statusText.innerText = "ÉLIMINÉ";
-                els.statusIcon.innerText = "💀";
-                els.inputZone.style.display = 'none';
-                vibrate(1000);
+                if(data.player === myId) {
+                    els.lives.innerText = "💀";
+                    setMyTurn(false);
+                    setStatus('💀', 'ÉLIMINÉ', 'Attends la fin de la partie');
+                }
             }
-
+            
             if(data.type === 'GAME_OVER') {
-                els.statusText.innerText = "VAINQUEUR : " + data.winner;
-                els.inputZone.style.display = 'none';
+                setMyTurn(false);
+                setStatus('🏆', 'FINIE', 'Vainqueur : ' + data.winner);
             }
         }
 
         function setMyTurn(isMe) {
             if(isMe) {
-                els.inputZone.style.display = 'flex';
-                els.statusText.innerText = "À TOI !";
-                els.statusIcon.innerText = "⚡";
-                els.statusText.style.color = "var(--primary-light)";
-                setTimeout(() => els.input.focus(), 50);
-                vibrate([100, 50, 100]);
+                views.status.style.display = 'none';
+                views.input.style.display = 'flex';
+                els.inp.value = '';
+                els.fb.innerText = '';
+                els.inp.focus();
+                navigator.vibrate([50, 50, 50]);
             } else {
-                els.inputZone.style.display = 'none';
-                els.statusText.innerText = "TOUR ADVERSE";
-                els.statusIcon.innerText = "👀";
-                els.statusText.style.color = "var(--text-muted)";
+                views.input.style.display = 'none';
+                views.status.style.display = 'flex';
+                setStatus('👀', 'EN ATTENTE', 'Regarde les autres jouer');
             }
         }
 
-        // Input Submit
-        els.input.addEventListener('keydown', (e) => {
+        function setStatus(icon, title, sub) {
+            els.statIcon.innerText = icon;
+            els.statText.innerText = title;
+            els.statSub.innerText = sub;
+        }
+
+        function startTimerAnim(duration) {
+            els.timer.style.transition = 'none';
+            els.timer.style.width = '100%';
+            // Force reflow
+            void els.timer.offsetWidth; 
+            els.timer.style.transition = `width ${duration}s linear`;
+            els.timer.style.width = '0%';
+        }
+        function stopTimerAnim() {
+            els.timer.style.transition = 'none';
+            els.timer.style.width = '0%';
+        }
+
+        // INPUT HANDLER
+        els.inp.addEventListener('keydown', (e) => {
             if(e.key === 'Enter') {
-                conn.send({type: 'WORD', word: els.input.value});
+                conn.send({type: 'WORD', word: els.inp.value});
             }
         });
 
-        function react(emoji) {
-            if(conn) conn.send({type: 'REACTION', emoji});
+        // PING UI
+        let pingVisible = false;
+        function updatePing(ms) {
+            els.pingVal.innerText = ms;
+            if(ms > 150) els.pingPill.classList.add('bad');
+            else els.pingPill.classList.remove('bad');
         }
-        
-        function vibrate(pattern) {
-            if(navigator.vibrate) navigator.vibrate(pattern);
+        function togglePing() {
+            pingVisible = !pingVisible;
+            els.pingPill.style.opacity = pingVisible ? '1' : '0.5';
         }
+
     </script>
 </body>
 </html>

@@ -3,22 +3,36 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WORD BOMB - Accueil</title>
+    <title>WORD BOMB 2.0</title>
     <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
 </head>
 <body>
-    <div class="card">
-        <h1 style="font-size: 3rem; margin-bottom: 0;">💣</h1>
-        <h1 style="background: linear-gradient(to right, var(--primary-light), var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">WORD BOMB</h1>
-        <p style="color: var(--text-muted); margin-bottom: 2rem;">Vitesse • Vocabulaire • Survie</p>
-        
-        <a href="host.html" style="text-decoration: none;">
-            <button class="btn">📺 CRÉER UNE PARTIE</button>
-        </a>
-        <br>
-        <a href="player.html" style="text-decoration: none;">
-            <button class="btn ghost">📱 REJOINDRE</button>
-        </a>
+    <div class="container">
+        <div class="card" style="max-width: 500px; width: 100%;">
+            <div style="font-size: 4rem; margin-bottom: 10px;">💣</div>
+            <h1>WORD BOMB</h1>
+            <p style="color: var(--text-muted); margin-bottom: 2rem; font-size: 1.1rem;">
+                Réflexion rapide • Vocabulaire • Survie
+            </p>
+            
+            <a href="host.html" style="text-decoration: none;">
+                <button class="btn">
+                    <span>📺</span> CRÉER UNE PARTIE (HÔTE)
+                </button>
+            </a>
+            <br>
+            <a href="player.html" style="text-decoration: none;">
+                <button class="btn secondary">
+                    <span>📱</span> REJOINDRE SUR MOBILE
+                </button>
+            </a>
+        </div>
     </div>
+
+    <script>
+        // Petite animation d'entrée
+        gsap.from(".card", {y: 50, opacity: 0, duration: 1, ease: "power3.out"});
+    </script>
 </body>
 </html>
