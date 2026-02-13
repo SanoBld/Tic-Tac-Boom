@@ -19,13 +19,15 @@
             
             <input type="text" id="p-name" placeholder="VOTRE PSEUDO" maxlength="12" style="margin-bottom:15px;">
             
-            <!-- Sélecteur d'Emoji -->
+            <!-- Sélecteur d'Emoji ÉTENDU -->
             <div style="margin-bottom: 15px;">
                 <label style="display: block; margin-bottom: 8px; font-size: clamp(0.85rem, 2vw, 0.9rem); color: var(--text-muted); text-align: left;">
                     Choisissez votre avatar :
                 </label>
-                <div class="picker-grid" id="emoji-picker">
-                    <!-- Rempli par JS -->
+                <div style="max-height: 200px; overflow-y: auto; padding: 5px;">
+                    <div class="picker-grid" id="emoji-picker">
+                        <!-- Rempli par JS -->
+                    </div>
                 </div>
             </div>
             
@@ -37,6 +39,18 @@
                 <div class="picker-grid" id="color-picker">
                     <!-- Rempli par JS -->
                 </div>
+            </div>
+
+            <!-- Mode économie d'énergie -->
+            <div style="margin-bottom: 20px; padding: 12px; background: rgba(0,0,0,0.2); border-radius: 8px; display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <div style="font-size: clamp(0.85rem, 2vw, 0.9rem); font-weight: 600;">🔋 Mode économie d'énergie</div>
+                    <div style="font-size: clamp(0.7rem, 1.8vw, 0.75rem); color: var(--text-muted);">Réduit les animations</div>
+                </div>
+                <label class="switch">
+                    <input type="checkbox" id="power-save-mode">
+                    <span class="slider"></span>
+                </label>
             </div>
             
             <button class="btn" onclick="joinGame()">REJOINDRE LA PARTIE</button>
@@ -78,7 +92,7 @@
         </div>
 
         <!-- ÉCRAN DE JEU -->
-        <div id="game-view" style="display:none; flex-direction:column; flex:1; overflow-y: auto;">
+        <div id="game-view" style="display:none; flex-direction:column; flex:1; overflow-y: auto; position: relative;">
             
             <!-- Header avec infos -->
             <div class="mobile-header">
@@ -103,6 +117,11 @@
             <!-- Info joueurs si < 5 -->
             <div id="players-info" class="players-info-compact" style="display: none;">
                 <div class="players-names" id="remaining-players-names"></div>
+            </div>
+
+            <!-- Zone pour mots tombants -->
+            <div id="falling-words-container" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none; overflow: hidden; z-index: 1000;">
+                <!-- Les mots apparaîtront ici -->
             </div>
 
             <!-- Zone de statut -->
@@ -131,11 +150,23 @@
     </div>
 
     <script>
-        // Configuration
-        const AVAILABLE_EMOJIS = ['😎', '🔥', '⚡', '🌟', '🎯', '🚀', '💎', '👑', '🦄', '🐉', '🎮', '🎨', '🎭', '🎪', '🎸', '⚽', '🏀', '🎳', '🎲', '🃏'];
+        // EMOJIS ÉTENDUS AVEC PLUS D'ANIMAUX
+        const AVAILABLE_EMOJIS = [
+            '😎', '🔥', '⚡', '🌟', '🎯', '🚀', '💎', '👑', '🦄', '🐉', 
+            '🎮', '🎨', '🎭', '🎪', '🎸', '⚽', '🏀', '🎳', '🎲', '🃏',
+            '🐶', '🐱', '🐭', '🐹', '🐰', '🦊', '🐻', '🐼', '🐨', '🐯',
+            '🦁', '🐮', '🐷', '🐸', '🐵', '🐔', '🐧', '🐦', '🐤', '🦆',
+            '🦅', '🦉', '🦇', '🐺', '🐗', '🐴', '🦄', '🐝', '🐛', '🦋',
+            '🐌', '🐞', '🐜', '🦗', '🕷️', '🦂', '🐢', '🐍', '🦎', '🦖',
+            '🦕', '🐙', '🦑', '🦐', '🦞', '🦀', '🐡', '🐠', '🐟', '🐬',
+            '🐳', '🐋', '🦈', '🐊', '🐅', '🐆', '🦓', '🦍', '🦧', '🐘',
+            '🦛', '🦏', '🐪', '🐫', '🦒', '🦘', '🦬', '🐃', '🐂', '🐄'
+        ];
+        
         const AVAILABLE_COLORS = [
             '#ef4444', '#f59e0b', '#eab308', '#22c55e', '#06b6d4',
-            '#3b82f6', '#6366f1', '#8b5cf6', '#ec4899', '#f43f5e'
+            '#3b82f6', '#6366f1', '#8b5cf6', '#ec4899', '#f43f5e',
+            '#14b8a6', '#84cc16', '#f97316', '#a855f7', '#64748b'
         ];
 
         let peer, conn;
@@ -143,6 +174,7 @@
         let pingStart = 0;
         let selectedEmoji = AVAILABLE_EMOJIS[0];
         let selectedColor = AVAILABLE_COLORS[0];
+        let powerSaveMode = false;
         let gameState = {
             playersAlive: 0,
             totalPlayers: 0,
@@ -176,147 +208,144 @@
             remainingNames: document.getElementById('remaining-players-names')
         };
 
-        // Initialisation des pickers
         function initPickers() {
-            const emojiPicker = document.getElementById('emoji-picker');
-            const colorPicker = document.getElementById('color-picker');
+            const ePicker = document.getElementById('emoji-picker');
+            const cPicker = document.getElementById('color-picker');
 
-            // Emojis
-            AVAILABLE_EMOJIS.forEach((emoji, idx) => {
+            // TOUS les emojis disponibles
+            AVAILABLE_EMOJIS.forEach((e, idx) => {
                 const div = document.createElement('div');
-                div.className = 'picker-item' + (idx === 0 ? ' selected' : '');
-                div.textContent = emoji;
-                div.onclick = () => selectEmoji(emoji, div);
-                emojiPicker.appendChild(div);
+                div.className = 'picker-item';
+                if(idx === 0) div.classList.add('selected');
+                div.innerText = e;
+                div.onclick = () => {
+                    ePicker.querySelectorAll('.picker-item').forEach(d => d.classList.remove('selected'));
+                    div.classList.add('selected');
+                    selectedEmoji = e;
+                };
+                ePicker.appendChild(div);
             });
 
-            // Couleurs
-            AVAILABLE_COLORS.forEach((color, idx) => {
+            AVAILABLE_COLORS.forEach((c, idx) => {
                 const div = document.createElement('div');
-                div.className = 'picker-item color-picker-item' + (idx === 0 ? ' selected' : '');
-                div.style.backgroundColor = color;
-                div.onclick = () => selectColor(color, div);
-                colorPicker.appendChild(div);
+                div.className = 'picker-item color-picker-item';
+                div.style.backgroundColor = c;
+                if(idx === 0) div.classList.add('selected');
+                div.onclick = () => {
+                    cPicker.querySelectorAll('.picker-item').forEach(d => d.classList.remove('selected'));
+                    div.classList.add('selected');
+                    selectedColor = c;
+                };
+                cPicker.appendChild(div);
             });
-        }
-
-        function selectEmoji(emoji, element) {
-            selectedEmoji = emoji;
-            document.querySelectorAll('#emoji-picker .picker-item').forEach(el => el.classList.remove('selected'));
-            element.classList.add('selected');
-            gsap.from(element, {scale: 0.8, duration: 0.2, ease: 'back.out(2)'});
-        }
-
-        function selectColor(color, element) {
-            selectedColor = color;
-            document.querySelectorAll('#color-picker .picker-item').forEach(el => el.classList.remove('selected'));
-            element.classList.add('selected');
-            gsap.from(element, {scale: 0.8, duration: 0.2, ease: 'back.out(2)'});
-        }
-
-        // Restaurer le nom
-        if(localStorage.getItem('wb_name')) {
-            document.getElementById('p-name').value = localStorage.getItem('wb_name');
         }
 
         function joinGame() {
-            const code = document.getElementById('room-code').value.toUpperCase();
+            const code = document.getElementById('room-code').value.trim().toUpperCase();
             const name = document.getElementById('p-name').value.trim();
-
+            
             if(!code || !name) {
-                alert('Veuillez remplir tous les champs !');
+                document.getElementById('conn-status').innerText = '⚠️ Code et pseudo requis !';
                 return;
             }
 
-            localStorage.setItem('wb_name', name);
-            document.getElementById('conn-status').innerText = "Connexion au serveur...";
-            
-            peer = new Peer();
-            peer.on('open', (id) => {
+            powerSaveMode = document.getElementById('power-save-mode').checked;
+
+            document.getElementById('conn-status').innerText = '🔄 Connexion en cours...';
+
+            peer = new Peer({debug: 0});
+
+            peer.on('open', id => {
                 myId = id;
-                conn = peer.connect("WB2-HOST-" + code);
-                
+                console.log('✅ PeerJS connecté. ID:', myId);
+
+                conn = peer.connect(code);
+
                 conn.on('open', () => {
+                    console.log('✅ Connecté à l\'hôte');
                     conn.send({
-                        type: 'JOIN', 
-                        name, 
+                        type: 'JOIN',
+                        name: name,
                         emoji: selectedEmoji,
                         color: selectedColor
                     });
+
+                    views.login.style.display = 'none';
+                    views.lobby.style.display = 'flex';
+
+                    document.getElementById('lobby-room-code').innerText = code;
+                    document.getElementById('lobby-my-name').innerText = name;
+                    document.getElementById('lobby-my-name').style.color = selectedColor;
+                    document.getElementById('lobby-my-emoji').innerText = selectedEmoji;
+                    document.getElementById('lobby-my-color').style.backgroundColor = selectedColor;
                 });
 
                 conn.on('data', handleData);
-                
                 conn.on('close', () => {
-                    alert("Déconnecté de l'hôte !");
+                    alert('❌ Connexion perdue avec l\'hôte');
                     location.reload();
                 });
-                
-                setTimeout(() => {
-                    if(!conn.open) {
-                        document.getElementById('conn-status').innerText = "Hôte introuvable. Vérifiez le code.";
-                    }
-                }, 3000);
+                conn.on('error', err => {
+                    console.error('❌ Erreur:', err);
+                    document.getElementById('conn-status').innerText = '❌ Erreur de connexion';
+                });
             });
 
-            peer.on('error', (err) => {
-                console.error('Erreur PeerJS:', err);
-                document.getElementById('conn-status').innerText = "Erreur de connexion. Réessayez.";
+            peer.on('error', err => {
+                console.error('❌ Erreur peer:', err);
+                if(err.type === 'peer-unavailable') {
+                    document.getElementById('conn-status').innerText = '❌ Code salle invalide';
+                } else {
+                    document.getElementById('conn-status').innerText = '❌ Erreur de connexion';
+                }
             });
         }
 
-        let maxTime = 10;
-
         function handleData(data) {
-            console.log('Data received:', data.type);
-
-            if(data.type === 'WELCOME') {
-                views.login.style.display = 'none';
-                views.lobby.style.display = 'flex';
-                document.getElementById('lobby-room-code').innerText = document.getElementById('room-code').value;
-                document.getElementById('lobby-my-name').innerText = document.getElementById('p-name').value;
-                document.getElementById('lobby-my-emoji').innerText = selectedEmoji;
-                document.getElementById('lobby-my-color').style.backgroundColor = selectedColor;
-                
-                gsap.from(views.lobby, {opacity: 0, y: 20, duration: 0.5});
+            if(data.type === 'CONNECTED') {
+                console.log('✅ Connexion confirmée. ID:', data.id);
             }
 
             if(data.type === 'LOBBY_UPDATE') {
                 updateLobbyList(data.players);
             }
 
-            if(data.type === 'GAME_START') {
-                views.lobby.style.display = 'none';
-                views.game.style.display = 'flex';
-                gameState.totalPlayers = data.players.length;
-                gameState.playersAlive = data.players.filter(p => p.alive).length;
-                updateGameStats();
-                gsap.from(views.game, {opacity: 0, scale: 0.95, duration: 0.5});
+            if(data.type === 'SETTINGS_UPDATE') {
+                // Les paramètres ont été mis à jour
+                console.log('⚙️ Paramètres mis à jour:', data.settings);
             }
 
             if(data.type === 'PING') {
                 conn.send({type: 'PONG', ts: data.ts});
-                const now = Date.now();
-                const lat = Math.floor((now - data.ts) / 2);
-                updatePing(lat);
+            }
+
+            if(data.type === 'GAME_START') {
+                views.lobby.style.display = 'none';
+                views.game.style.display = 'flex';
+                setStatus('🎮', 'PARTIE LANCÉE', 'Préparez-vous !');
+                
+                if(!powerSaveMode) {
+                    gsap.from(views.game, {opacity: 0, scale: 0.95, duration: 0.5});
+                }
             }
 
             if(data.type === 'NEW_TURN') {
+                gameState.currentRound++;
                 els.syl.innerText = data.syllable;
-                maxTime = data.maxTime;
-                gameState.currentRound = data.round || gameState.currentRound + 1;
                 
-                if(data.player === myId) {
-                    setMyTurn(true);
-                    startTimerAnim(maxTime);
-                } else {
-                    setMyTurn(false);
-                    stopTimerAnim();
-                    const playerName = data.playerName || 'un joueur';
-                    setStatus('👀', 'TOUR DE ' + playerName.toUpperCase(), 'Attendez votre tour');
+                const isMyTurn = data.activePlayer === myId;
+                setMyTurn(isMyTurn);
+
+                if(!isMyTurn) {
+                    const activeP = data.players.find(p => p.id === data.activePlayer);
+                    if(activeP) {
+                        setStatus('⏳', `TOUR DE ${activeP.name}`, 'Attendez votre tour...');
+                    }
                 }
-                
-                updateGameStats();
+
+                if(isMyTurn) {
+                    startTimerAnim(data.duration);
+                }
             }
 
             if(data.type === 'PLAYERS_UPDATE') {
@@ -368,6 +397,52 @@
                     setStatus('🏁', 'PARTIE TERMINÉE', 'Vainqueur : ' + data.winner);
                 }
             }
+
+            // Gestion de l'exclusion par l'hôte
+            if(data.type === 'KICKED') {
+                alert(data.message || 'Vous avez été exclu de la partie par l\'hôte');
+                location.reload();
+            }
+
+            // NOUVEAU: Animation de mot tombant
+            if(data.type === 'WORD_ANIMATION') {
+                showFallingWord(data.word, data.playerName, data.color);
+            }
+        }
+
+        function showFallingWord(word, playerName, color) {
+            const container = document.getElementById('falling-words-container');
+            const wordEl = document.createElement('div');
+            wordEl.style.cssText = `
+                position: absolute;
+                top: -100px;
+                left: ${Math.random() * 70 + 15}%;
+                transform: translateX(-50%);
+                font-size: clamp(1.2rem, 3.5vw, 1.8rem);
+                font-weight: 800;
+                color: ${color};
+                text-shadow: 0 0 10px ${color};
+                pointer-events: none;
+                z-index: 1001;
+            `;
+            wordEl.innerHTML = `
+                <div style="text-align: center;">
+                    <div style="font-size: clamp(0.8rem, 2vw, 1rem); margin-bottom: 3px; opacity: 0.8;">${playerName}</div>
+                    <div>${word}</div>
+                </div>
+            `;
+            container.appendChild(wordEl);
+
+            if(!powerSaveMode) {
+                gsap.to(wordEl, {
+                    top: '110%',
+                    duration: 3,
+                    ease: 'power1.in',
+                    onComplete: () => wordEl.remove()
+                });
+            } else {
+                setTimeout(() => wordEl.remove(), 2000);
+            }
         }
 
         function updateLobbyList(players) {
@@ -386,7 +461,7 @@
                         ${player.emoji}
                     </div>
                     <div class="lobby-player-info">
-                        <div class="lobby-player-name">${player.name}</div>
+                        <div class="lobby-player-name" style="color: ${player.color};">${player.name}</div>
                         <div class="lobby-player-ping" style="color: ${getPingColor(player.ping || 0)}">
                             ${player.ping ? player.ping + 'ms' : '...'}
                         </div>
@@ -408,7 +483,9 @@
                 els.playersInfo.style.display = 'block';
                 const names = gameState.alivePlayers.map(p => p.emoji + ' ' + p.name).join(' • ');
                 els.remainingNames.innerText = names;
-                gsap.from(els.playersInfo, {opacity: 0, y: -10, duration: 0.3});
+                if(!powerSaveMode) {
+                    gsap.from(els.playersInfo, {opacity: 0, y: -10, duration: 0.3});
+                }
             } else {
                 els.playersInfo.style.display = 'none';
             }
@@ -423,7 +500,9 @@
                 els.inp.focus();
                 navigator.vibrate && navigator.vibrate([50, 50, 50]);
                 
-                gsap.from(els.syl, {scale: 0, rotation: 360, duration: 0.5, ease: 'back.out(2)'});
+                if(!powerSaveMode) {
+                    gsap.from(els.syl, {scale: 0, rotation: 360, duration: 0.5, ease: 'back.out(2)'});
+                }
             } else {
                 views.input.style.display = 'none';
                 views.status.style.display = 'flex';
@@ -435,7 +514,9 @@
             els.statText.innerText = title;
             els.statSub.innerText = sub;
             
-            gsap.from(els.statIcon, {scale: 0, rotation: 180, duration: 0.4, ease: 'back.out(2)'});
+            if(!powerSaveMode) {
+                gsap.from(els.statIcon, {scale: 0, rotation: 180, duration: 0.4, ease: 'back.out(2)'});
+            }
         }
 
         function startTimerAnim(duration) {
@@ -448,13 +529,15 @@
             els.timer.style.transition = `width ${duration}s linear, background ${duration}s linear`;
             els.timer.style.width = '0%';
             
-            setTimeout(() => {
-                els.timer.style.background = 'var(--warning)';
-            }, duration * 500);
-            
-            setTimeout(() => {
-                els.timer.style.background = 'var(--danger)';
-            }, duration * 750);
+            if(!powerSaveMode) {
+                setTimeout(() => {
+                    els.timer.style.background = 'var(--warning)';
+                }, duration * 500);
+                
+                setTimeout(() => {
+                    els.timer.style.background = 'var(--danger)';
+                }, duration * 750);
+            }
         }
 
         function stopTimerAnim() {
@@ -488,7 +571,9 @@
 
         initPickers();
         
-        gsap.from('.card', {opacity: 0, y: 30, duration: 0.6, ease: 'power3.out'});
+        if(!powerSaveMode) {
+            gsap.from('.card', {opacity: 0, y: 30, duration: 0.6, ease: 'power3.out'});
+        }
     </script>
 </body>
 </html>
