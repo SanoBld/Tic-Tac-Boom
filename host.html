@@ -656,49 +656,64 @@
         }
 
         function showFallingWord(word, playerName, color) {
-            const container = document.getElementById('falling-words-container');
-            const wordEl = document.createElement('div');
-            wordEl.style.cssText = `
-                position: absolute;
-                top: -100px;
-                left: ${Math.random() * 80 + 10}%;
-                transform: translateX(-50%);
+            // Créer une notification dans le coin supérieur droit
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 15px 20px;
+                background: ${color};
+                border-radius: 12px;
+                box-shadow: 0 4px 15px ${color}60, 0 2px 8px rgba(0,0,0,0.3);
+                border: 2px solid rgba(255,255,255,0.3);
+                z-index: 10000;
                 pointer-events: none;
-                z-index: 1000;
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                max-width: 280px;
             `;
-            wordEl.innerHTML = `
-                <div style="text-align: center;">
-                    <div style="font-size: clamp(0.8rem, 2vw, 1rem); margin-bottom: 5px; color: ${color}; font-weight: 600;">${playerName}</div>
-                    <div style="
-                        width: clamp(60px, 15vw, 80px);
-                        height: clamp(60px, 15vw, 80px);
-                        background: ${color};
-                        border-radius: 12px;
-                        box-shadow: 0 0 20px ${color}80, 0 4px 12px rgba(0,0,0,0.4);
-                        border: 3px solid rgba(255,255,255,0.2);
-                        margin: 0 auto;
-                    "></div>
+            notification.innerHTML = `
+                <div style="
+                    width: 40px;
+                    height: 40px;
+                    background: rgba(255,255,255,0.2);
+                    border-radius: 8px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 1.2rem;
+                    font-weight: 800;
+                    color: white;
+                    flex-shrink: 0;
+                ">✓</div>
+                <div style="flex: 1; min-width: 0;">
+                    <div style="font-size: clamp(0.85rem, 2vw, 0.95rem); font-weight: 700; color: white; margin-bottom: 2px;">${playerName}</div>
+                    <div style="font-size: clamp(0.75rem, 1.8vw, 0.85rem); color: rgba(255,255,255,0.9); font-weight: 500;">${word}</div>
                 </div>
             `;
-            container.appendChild(wordEl);
+            document.body.appendChild(notification);
 
+            // Animation d'apparition
             if(!powerSaveMode) {
-                gsap.to(wordEl, {
-                    top: '110%',
-                    rotation: 360,
-                    duration: 2.5,
-                    ease: 'power2.in',
-                    onComplete: () => wordEl.remove()
+                gsap.from(notification, {
+                    x: 100,
+                    opacity: 0,
+                    duration: 0.4,
+                    ease: 'back.out(1.7)'
                 });
-                gsap.to(wordEl.querySelector('div > div:last-child'), {
-                    scale: 0.8,
-                    duration: 1.25,
-                    yoyo: true,
-                    repeat: 1,
-                    ease: 'power1.inOut'
+                // Disparition après 2.5s
+                gsap.to(notification, {
+                    opacity: 0,
+                    x: 100,
+                    duration: 0.3,
+                    delay: 2.5,
+                    ease: 'power2.in',
+                    onComplete: () => notification.remove()
                 });
             } else {
-                setTimeout(() => wordEl.remove(), 2000);
+                setTimeout(() => notification.remove(), 2500);
             }
 
             // Broadcast aux joueurs
