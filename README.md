@@ -35,7 +35,7 @@ Le projet est configuré comme une PWA. Vous pouvez :
 - Vérification instantanée via un objet `Set` en JavaScript pour des performances optimales.
 
 ### 🏅 Système de Succès
-- Intégration d'un système de badges pour récompenser la fidélité et la performance.
+- Intégration d'un système de badges.
 ---
 
 ## 🛠️ Stack Technique
