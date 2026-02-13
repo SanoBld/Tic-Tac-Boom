@@ -1,6 +1,6 @@
 {
-  "name": "Word Bomb 2.0",
-  "short_name": "Word Bomb",
+  "name": "Tic Tac Boom",
+  "short_name": "Tic Tac Boom",
   "description": "Jeu de vocabulaire rapide et compétitif",
   "start_url": "/index.html",
   "display": "standalone",
@@ -21,22 +21,5 @@
       "purpose": "any maskable"
     }
   ],
-  "categories": ["games", "education"],
-  "screenshots": [],
-  "shortcuts": [
-    {
-      "name": "Mode Solo",
-      "short_name": "Solo",
-      "description": "Jouer en mode solo",
-      "url": "/solo.html",
-      "icons": [{ "src": "icon-192.png", "sizes": "192x192" }]
-    },
-    {
-      "name": "Créer Partie",
-      "short_name": "Hôte",
-      "description": "Créer une partie multijoueur",
-      "url": "/host.html",
-      "icons": [{ "src": "icon-192.png", "sizes": "192x192" }]
-    }
-  ]
+  "categories": ["games", "education"]
 }

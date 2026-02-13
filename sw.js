@@ -1,5 +1,5 @@
-// Service Worker pour Word Bomb 2.0
-const CACHE_NAME = 'word-bomb-v1';
+// Service Worker pour Tic Tac Boom
+const CACHE_NAME = 'tictacboom-v1';
 const urlsToCache = [
   '/',
   '/index.html',
