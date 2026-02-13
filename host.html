@@ -656,42 +656,24 @@
         }
 
         function showFallingWord(word, playerName, color) {
-            // Créer une notification dans le coin supérieur droit
+            // Notification épurée en haut à droite
             const notification = document.createElement('div');
             notification.style.cssText = `
                 position: fixed;
                 top: 20px;
                 right: 20px;
-                padding: 15px 20px;
-                background: ${color};
-                border-radius: 12px;
-                box-shadow: 0 4px 15px ${color}60, 0 2px 8px rgba(0,0,0,0.3);
-                border: 2px solid rgba(255,255,255,0.3);
+                padding: 12px 18px;
+                background: rgba(15, 23, 42, 0.95);
+                backdrop-filter: blur(10px);
+                border-radius: 10px;
+                border-left: 4px solid ${color};
+                box-shadow: 0 4px 20px rgba(0,0,0,0.3), 0 0 0 1px rgba(255,255,255,0.1);
                 z-index: 10000;
                 pointer-events: none;
-                display: flex;
-                align-items: center;
-                gap: 12px;
-                max-width: 280px;
             `;
             notification.innerHTML = `
-                <div style="
-                    width: 40px;
-                    height: 40px;
-                    background: rgba(255,255,255,0.2);
-                    border-radius: 8px;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    font-size: 1.2rem;
-                    font-weight: 800;
-                    color: white;
-                    flex-shrink: 0;
-                ">✓</div>
-                <div style="flex: 1; min-width: 0;">
-                    <div style="font-size: clamp(0.85rem, 2vw, 0.95rem); font-weight: 700; color: white; margin-bottom: 2px;">${playerName}</div>
-                    <div style="font-size: clamp(0.75rem, 1.8vw, 0.85rem); color: rgba(255,255,255,0.9); font-weight: 500;">${word}</div>
-                </div>
+                <div style="font-size: clamp(0.75rem, 2vw, 0.85rem); font-weight: 600; color: ${color}; margin-bottom: 4px;">${playerName}</div>
+                <div style="font-size: clamp(0.95rem, 2.5vw, 1.1rem); font-weight: 700; color: white;">${word}</div>
             `;
             document.body.appendChild(notification);
 
@@ -701,12 +683,12 @@
                     x: 100,
                     opacity: 0,
                     duration: 0.4,
-                    ease: 'back.out(1.7)'
+                    ease: 'power3.out'
                 });
                 // Disparition après 2.5s
                 gsap.to(notification, {
                     opacity: 0,
-                    x: 100,
+                    x: 50,
                     duration: 0.3,
                     delay: 2.5,
                     ease: 'power2.in',
