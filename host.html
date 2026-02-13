@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HÔTE - Word Bomb 2.0</title>
+    <title>HÔTE - Tic Tac Boom</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
@@ -16,10 +16,15 @@
             
             <!-- PANNEAU LATÉRAL -->
             <div class="panel-side">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
-                    <h3 style="margin:0; font-size: clamp(1rem, 3vw, 1.2rem);">SALLE</h3>
-                    <span id="room-code" class="mono" style="color:var(--accent); font-size: clamp(1.2rem, 4vw, 1.5rem); font-weight: 800;">...</span>
+                <!-- CODE DE PARTIE EN GRAND -->
+                <div style="background: rgba(99, 102, 241, 0.15); padding: 20px; border-radius: 12px; border: 2px solid var(--primary); margin-bottom: 20px; text-align: center;">
+                    <div style="font-size: clamp(0.75rem, 2vw, 0.85rem); color: var(--text-muted); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px;">🎯 CODE DE LA PARTIE</div>
+                    <div id="room-code" class="mono" style="color:var(--accent); font-size: clamp(2.5rem, 6vw, 3.5rem); font-weight: 800; letter-spacing: 0.2em; margin-bottom: 12px; text-shadow: 0 0 20px rgba(236, 72, 153, 0.5);">...</div>
+                    <button class="btn secondary" onclick="copyRoomCode()" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                        <span id="copy-icon">📋</span> <span id="copy-text">COPIER LE CODE</span>
+                    </button>
                 </div>
+
                 <hr style="border:0; border-top:1px solid var(--glass-border); width:100%; margin-bottom: 15px;">
 
                 <!-- CONFIGURATION HÔTE -->
@@ -33,6 +38,17 @@
                         </div>
                         <label class="switch">
                             <input type="checkbox" id="host-plays-check" onchange="toggleHostPlays()">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="setting-row">
+                        <div class="setting-label">
+                            <span class="setting-label-main">Mode économie d'énergie</span>
+                            <span class="setting-label-sub">Réduire les animations</span>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" id="power-save-mode" onchange="togglePowerSave()">
                             <span class="slider"></span>
                         </label>
                     </div>
@@ -87,7 +103,7 @@
                     
                     <div class="setting-row">
                         <div class="setting-label">
-                            <span class="setting-label-main">Vies</span>
+                            <span class="setting-label-main">Vies (Tous les joueurs)</span>
                             <span class="setting-label-sub">Nombre de vies par joueur</span>
                         </div>
                         <div style="display: flex; align-items: center; gap: 10px; flex-shrink: 0;">
@@ -107,9 +123,60 @@
                         </div>
                     </div>
 
+                    <div class="setting-row">
+                        <div class="setting-label">
+                            <span class="setting-label-main">Difficulté syllabes</span>
+                            <span class="setting-label-sub">Complexité des syllabes</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 10px; flex-shrink: 0;">
+                            <select id="syllable-difficulty" onchange="updateSettings('syllableDifficulty', this.value)" style="background: rgba(0,0,0,0.3); border: 1px solid var(--glass-border); border-radius: 8px; color: white; padding: 8px; font-weight: 600;">
+                                <option value="easy">Facile</option>
+                                <option value="normal" selected>Normal</option>
+                                <option value="hard">Difficile</option>
+                                <option value="expert">Expert</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="setting-row">
+                        <div class="setting-label">
+                            <span class="setting-label-main">Longueur syllabes</span>
+                            <span class="setting-label-sub">Nombre de caractères</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 10px; flex-shrink: 0;">
+                            <select id="syllable-length" onchange="updateSettings('syllableLength', this.value)" style="background: rgba(0,0,0,0.3); border: 1px solid var(--glass-border); border-radius: 8px; color: white; padding: 8px; font-weight: 600;">
+                                <option value="short">Courtes (2)</option>
+                                <option value="medium" selected>Moyennes (2-3)</option>
+                                <option value="long">Longues (3-4)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="setting-row">
+                        <div class="setting-label">
+                            <span class="setting-label-main">Mots interdits répétés</span>
+                            <span class="setting-label-sub">Un mot = une seule utilisation</span>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" id="unique-words" checked onchange="updateSettings('uniqueWords', this.checked)">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+
                     <hr style="border:0; border-top:1px solid var(--glass-border); width:100%; margin: 15px 0;">
 
                     <div class="settings-title">🎨 Fonctionnalités</div>
+
+                    <div class="setting-row">
+                        <div class="setting-label">
+                            <span class="setting-label-main">Voir mots adversaires</span>
+                            <span class="setting-label-sub">Animation mots tombants</span>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" id="show-words" checked onchange="updateSettings('showWords', this.checked)">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
 
                     <div class="setting-row">
                         <div class="setting-label">
@@ -166,499 +233,526 @@
             <!-- PANNEAU PRINCIPAL -->
             <div class="panel-main">
                 
-                <!-- ÉCRAN D'ATTENTE -->
-                <div id="wait-screen" style="text-align:center; width: 100%;">
-                    <div style="font-size: clamp(3.5rem, 10vw, 5rem); margin-bottom: 20px;" class="pulse">💣</div>
-                    <h1 style="margin-bottom: 10px; font-size: clamp(1.5rem, 5vw, 2.5rem);">EN ATTENTE DE JOUEURS</h1>
-                    <p style="color:var(--text-muted); font-size: clamp(1rem, 3vw, 1.2rem); margin-bottom: 40px; line-height: 1.5;">
-                        Code de la salle : <span id="wait-room-code" class="mono" style="color: var(--accent); font-size: clamp(1.2rem, 4vw, 1.5rem); font-weight: 800;">XXXX</span>
-                    </p>
+                <!-- VUE D'ATTENTE -->
+                <div id="waiting-view" style="width:100%; max-width:800px;">
+                    <div style="text-align:center; margin-bottom:30px;">
+                        <div class="bomb-icon-animated" style="font-size: clamp(4rem, 12vw, 6rem);">💣</div>
+                        <h1 style="margin-bottom: 1rem;">EN ATTENTE DES JOUEURS</h1>
+                        <p style="color: var(--text-muted); font-size: clamp(0.9rem, 2.5vw, 1rem);">
+                            Partagez le code <span class="mono" style="color: var(--accent); font-weight: 700;" id="code-display-2">XXXX</span> avec vos amis
+                        </p>
+                    </div>
 
-                    <!-- Affichage de tous les joueurs en attente -->
-                    <div id="waiting-players-display" style="max-width: 800px; margin: 0 auto;">
+                    <!-- RÈGLES DYNAMIQUES -->
+                    <div id="dynamic-rules" style="background: rgba(0,0,0,0.3); padding: 20px; border-radius: 12px; margin-bottom: 20px; text-align: left;">
+                        <h3 style="margin-bottom: 15px; text-align: center;">📖 RÈGLES DE CETTE PARTIE</h3>
+                        <div id="rules-content" style="font-size: clamp(0.85rem, 2vw, 0.9rem); color: var(--text-muted); line-height: 1.8;">
+                            <!-- Rempli dynamiquement par JS -->
+                        </div>
+                    </div>
+
+                    <div id="waiting-players-display" style="min-height:200px;">
+                        <p style="color: var(--text-muted); text-align:center; font-size: clamp(0.85rem, 2vw, 0.9rem);">
+                            Aucun joueur connecté pour le moment...
+                        </p>
+                    </div>
+                </div>
+
+                <!-- VUE DE JEU -->
+                <div id="game-view" style="display:none; width:100%; max-width:1000px; position:relative;">
+                    <div style="text-align:center; margin-bottom:25px;">
+                        <div id="turn-indicator" style="font-size: clamp(0.9rem, 2.5vw, 1.1rem); color:var(--text-muted); margin-bottom:10px;">TOUR DE ...</div>
+                        <div class="syllable-box" id="syllable-display">...</div>
+                        <div class="timer-track">
+                            <div class="timer-fill" id="timer-bar"></div>
+                        </div>
+                    </div>
+
+                    <!-- Zone pour mots tombants -->
+                    <div id="falling-words-container" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none; overflow: hidden; z-index: 100;">
+                        <!-- Les mots apparaîtront ici -->
+                    </div>
+
+                    <div class="grid-container" id="game-grid">
                         <!-- Rempli par JS -->
                     </div>
 
-                    <div style="margin-top: 40px; padding: clamp(15px, 3vw, 20px); background: rgba(0, 0, 0, 0.2); border-radius: 12px; max-width: 600px; margin-left: auto; margin-right: auto;">
-                        <h3 style="margin-bottom: 15px; color: var(--primary); font-size: clamp(1rem, 3vw, 1.2rem);">Comment jouer ?</h3>
-                        <ul style="text-align: left; color: var(--text-muted); line-height: 1.8; font-size: clamp(0.85rem, 2vw, 0.95rem); padding-left: 20px;">
-                            <li>Trouvez un mot contenant la syllabe affichée</li>
-                            <li>Tapez votre réponse avant la fin du chrono</li>
-                            <li>Chaque mot ne peut être utilisé qu'une fois</li>
-                            <li>Perdez une vie si vous ne répondez pas à temps</li>
-                            <li>Le dernier joueur en vie gagne !</li>
-                        </ul>
+                    <!-- HISTORIQUE DES MOTS -->
+                    <div id="words-history" style="margin-top: 20px; padding: 15px; background: rgba(0,0,0,0.3); border-radius: 12px; max-height: 150px; overflow-y: auto;">
+                        <h4 style="margin-bottom: 10px; font-size: clamp(0.85rem, 2vw, 0.9rem); color: var(--text-muted);">📜 HISTORIQUE DES MOTS</h4>
+                        <div id="history-list" style="display: flex; flex-wrap: wrap; gap: 8px;">
+                            <span style="font-size: clamp(0.75rem, 2vw, 0.8rem); color: var(--text-muted);">Aucun mot joué pour l'instant</span>
+                        </div>
                     </div>
                 </div>
 
-                <!-- ÉCRAN DE JEU -->
-                <div id="game-screen" style="display:none; width:100%; height:100%; flex-direction:column; align-items:center; justify-content:center;">
-                    
-                    <h2 id="turn-indicator" style="letter-spacing: 2px; color: var(--primary); margin-bottom: 20px; font-size: clamp(1rem, 3vw, 1.5rem);">TOUR DE...</h2>
-                    
-                    <div class="syllable-box" id="syllable-display">---</div>
-
-                    <div class="timer-track">
-                        <div class="timer-fill" id="timer-bar"></div>
+                <!-- VUE GAME OVER -->
+                <div id="gameover-view" style="display:none; text-align:center; width:100%; max-width:600px;">
+                    <div style="font-size: clamp(4rem, 12vw, 6rem); margin-bottom: 20px;">🏆</div>
+                    <h1 style="margin-bottom: 1rem;">PARTIE TERMINÉE</h1>
+                    <div id="winner-display" style="font-size: clamp(1.5rem, 4vw, 2rem); color: var(--accent); margin-bottom: 30px; font-weight: 700;">
+                        Vainqueur : ...
                     </div>
 
-                    <div class="grid-container" id="game-grid"></div>
+                    <!-- Historique final -->
+                    <div style="margin-bottom: 20px; padding: 20px; background: rgba(0,0,0,0.3); border-radius: 12px;">
+                        <h3 style="margin-bottom: 15px;">📊 STATISTIQUES DE LA PARTIE</h3>
+                        <div id="game-stats" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px;">
+                            <!-- Rempli par JS -->
+                        </div>
+                    </div>
+
+                    <button class="btn" onclick="location.reload()">NOUVELLE PARTIE</button>
                 </div>
 
-                <!-- INPUT HÔTE (si l'hôte joue) -->
+                <!-- Input overlay pour l'hôte s'il joue -->
                 <div id="host-input-overlay">
                     <input type="text" id="host-word" placeholder="Votre mot..." autocomplete="off">
-                    <button class="btn" style="width:auto; padding: 12px 24px;" onclick="hostSubmit()">ENVOYER</button>
+                    <button class="btn" onclick="submitHostWord()">VALIDER</button>
                 </div>
-
             </div>
         </div>
     </div>
 
     <script>
-        // Configuration
-        const AVAILABLE_EMOJIS = ['👑', '🔥', '⚡', '🌟', '🎯', '🚀', '💎', '🦄', '🐉', '🎮', '🎨', '🎭', '🎪', '🎸', '⚽', '🏀', '🎳', '🎲', '🃏', '🎹'];
-        const AVAILABLE_COLORS = ['#ef4444', '#f59e0b', '#eab308', '#22c55e', '#06b6d4', '#3b82f6', '#6366f1', '#8b5cf6', '#ec4899', '#f43f5e'];
+        // EMOJIS ÉTENDUS AVEC PLUS D'ANIMAUX
+        const AVAILABLE_EMOJIS = [
+            '😎', '🔥', '⚡', '🌟', '🎯', '🚀', '💎', '👑', '🦄', '🐉', 
+            '🎮', '🎨', '🎭', '🎪', '🎸', '⚽', '🏀', '🎳', '🎲', '🃏',
+            '🐶', '🐱', '🐭', '🐹', '🐰', '🦊', '🐻', '🐼', '🐨', '🐯',
+            '🦁', '🐮', '🐷', '🐸', '🐵', '🐔', '🐧', '🐦', '🐤', '🦆',
+            '🦅', '🦉', '🦇', '🐺', '🐗', '🐴', '🦄', '🐝', '🐛', '🦋',
+            '🐌', '🐞', '🐜', '🦗', '🕷️', '🦂', '🐢', '🐍', '🦎', '🦖',
+            '🦕', '🐙', '🦑', '🦐', '🦞', '🦀', '🐡', '🐠', '🐟', '🐬',
+            '🐳', '🐋', '🦈', '🐊', '🐅', '🐆', '🦓', '🦍', '🦧', '🐘',
+            '🦛', '🦏', '🐪', '🐫', '🦒', '🦘', '🦬', '🐃', '🐂', '🐄'
+        ];
 
-        let hostEmoji = '👑';
-        let hostColor = '#6366f1';
+        const AVAILABLE_COLORS = [
+            '#ef4444', '#f59e0b', '#eab308', '#22c55e', '#06b6d4',
+            '#3b82f6', '#6366f1', '#8b5cf6', '#ec4899', '#f43f5e',
+            '#14b8a6', '#84cc16', '#f97316', '#a855f7', '#64748b'
+        ];
 
-        // LOGIQUE HÔTE
-        const ROOM_ID = Math.random().toString(36).substring(2, 6).toUpperCase();
-        document.getElementById('room-code').innerText = ROOM_ID;
-        document.getElementById('wait-room-code').innerText = ROOM_ID;
-
-        // Configuration
-        let settings = { 
-            lives: 2, 
-            startTime: 20,
-            mode: 'classic',
-            chatEnabled: true,
-            reactionsEnabled: true,
-            soundsEnabled: true
-        };
-
-        let state = {
-            status: 'LOBBY',
-            players: {},
-            queue: [],
-            turnIdx: 0,
-            syllable: "",
-            usedWords: new Set(),
-            timeLeft: 0,
-            maxTime: 0,
-            currentRound: 0
-        };
-
-        let timerInt;
+        let peer, myPeerId;
+        let connections = [];
         let pingInt;
-        let DICTIONARY = new Set();
+        let timerInt;
+        let powerSaveMode = false;
+        let wordsHistory = [];
 
-        window.addEventListener('dictionaryReady', () => {
-            DICTIONARY = window.DICTIONARY_DATA;
-            console.log('✅ Dictionnaire prêt pour le jeu:', DICTIONARY.size, 'mots');
-        });
+        const state = {
+            players: {},
+            settings: {
+                mode: 'classic',
+                lives: 2,
+                startTime: 20,
+                syllableDifficulty: 'normal',
+                syllableLength: 'medium',
+                uniqueWords: true,
+                showWords: true
+            },
+            syllable: '',
+            queue: [],
+            activePlayer: null,
+            timeLeft: 0,
+            maxTime: 20,
+            usedWords: new Set()
+        };
 
-        if(window.DICTIONARY_DATA && window.DICTIONARY_DATA.size > 0) {
-            DICTIONARY = window.DICTIONARY_DATA;
-        }
+        let hostPlayer = {
+            emoji: AVAILABLE_EMOJIS[0],
+            color: AVAILABLE_COLORS[0],
+            enabled: false
+        };
 
-        // PeerJS
-        const peer = new Peer("WB2-HOST-" + ROOM_ID);
-        
-        peer.on('open', (id) => {
-            console.log('🎮 Host Ready:', id);
-            gsap.from('#wait-screen', {opacity: 0, y: 30, duration: 0.8, ease: 'power3.out'});
-        });
-        
-        peer.on('connection', (conn) => {
-            conn.on('open', () => {
-                conn.send({type: 'WELCOME', settings});
-                
-                conn.on('data', (data) => {
-                    handleData(conn.peer, data, conn);
-                });
-
-                conn.on('close', () => {
-                    if(state.players[conn.peer]) {
-                        delete state.players[conn.peer];
-                        updateLobbyUI();
-                        if(state.status === 'PLAYING') {
-                            updateGameGrid();
-                            checkWinCondition();
-                        }
-                    }
-                });
+        function copyRoomCode() {
+            const code = myPeerId;
+            navigator.clipboard.writeText(code).then(() => {
+                document.getElementById('copy-icon').innerText = '✅';
+                document.getElementById('copy-text').innerText = 'CODE COPIÉ !';
+                setTimeout(() => {
+                    document.getElementById('copy-icon').innerText = '📋';
+                    document.getElementById('copy-text').innerText = 'COPIER LE CODE';
+                }, 2000);
             });
-        });
+        }
 
-        function handleData(id, data, conn) {
-            if(data.type === 'JOIN') {
-                if(state.status !== 'LOBBY') {
-                    conn.send({type: 'ERROR', msg: 'Partie en cours'});
-                    return;
-                }
-                state.players[id] = {
-                    id, 
-                    name: data.name.substring(0, 12), 
-                    emoji: data.emoji || '😎',
-                    color: data.color || '#6366f1',
-                    lives: settings.lives, 
-                    alive: true, 
-                    conn, 
-                    ping: 0, 
-                    isHost: false
-                };
-                updateLobbyUI();
-                broadcastLobbyUpdate();
-                
-                gsap.from(`#lobby-player-${id}`, {x: -50, opacity: 0, duration: 0.5, ease: 'back.out(1.7)'});
-            }
-
-            if(data.type === 'PONG') {
-                const now = Date.now();
-                const latency = now - data.ts;
-                if(state.players[id]) {
-                    state.players[id].ping = latency;
-                    updatePingUI(id);
-                }
-            }
-
-            if(data.type === 'WORD') {
-                processWord(id, data.word);
+        function togglePowerSave() {
+            powerSaveMode = document.getElementById('power-save-mode').checked;
+            if(powerSaveMode) {
+                // Désactiver certaines animations
+                gsap.globalTimeline.timeScale(0.1);
+            } else {
+                gsap.globalTimeline.timeScale(1);
             }
         }
 
-        function toggleHostPlays() {
-            const isChecked = document.getElementById('host-plays-check').checked;
-            const setupDiv = document.getElementById('host-player-setup');
-            
-            if(isChecked) {
-                setupDiv.style.display = 'block';
-                gsap.from(setupDiv, {height: 0, opacity: 0, duration: 0.3});
-            } else {
-                gsap.to(setupDiv, {
-                    height: 0, 
-                    opacity: 0, 
-                    duration: 0.3,
-                    onComplete: () => {
-                        setupDiv.style.display = 'none';
-                    }
-                });
+        function updateDynamicRules() {
+            const mode = state.settings.mode;
+            const lives = state.settings.lives;
+            const time = state.settings.startTime;
+            const difficulty = state.settings.syllableDifficulty;
+            const unique = state.settings.uniqueWords;
+            const showWords = state.settings.showWords;
+
+            let modeText = '';
+            switch(mode) {
+                case 'classic': modeText = 'Mode Classique - Syllabes variées'; break;
+                case 'fast': modeText = 'Mode Rapide - Temps réduit de moitié'; break;
+                case 'survival': modeText = 'Mode Survie - Une seule vie'; break;
+                case 'marathon': modeText = 'Mode Marathon - Pas d\'élimination, le plus de points gagne'; break;
             }
+
+            let diffText = '';
+            switch(difficulty) {
+                case 'easy': diffText = 'Syllabes simples'; break;
+                case 'normal': diffText = 'Syllabes normales'; break;
+                case 'hard': diffText = 'Syllabes complexes'; break;
+                case 'expert': diffText = 'Syllabes très difficiles'; break;
+            }
+
+            const rulesHTML = `
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                    <div><strong>🎮 Mode :</strong> ${modeText}</div>
+                    <div><strong>❤️ Vies :</strong> ${lives} vie(s) par joueur</div>
+                    <div><strong>⏱️ Temps :</strong> ${time} secondes par tour</div>
+                    <div><strong>🎯 Difficulté :</strong> ${diffText}</div>
+                    <div><strong>📝 Mots uniques :</strong> ${unique ? 'Activé (un mot ne peut être utilisé qu\'une fois)' : 'Désactivé'}</div>
+                    <div><strong>👁️ Mots visibles :</strong> ${showWords ? 'Activé (vous verrez les mots des adversaires)' : 'Désactivé'}</div>
+                </div>
+            `;
+
+            document.getElementById('rules-content').innerHTML = rulesHTML;
+        }
+
+        window.addEventListener('dictionaryReady', initHost);
+        loadFullDictionary();
+
+        function generateRoomCode() {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+            let code = '';
+            for(let i = 0; i < 4; i++) {
+                code += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return code;
+        }
+
+        function initHost() {
+            const roomCode = generateRoomCode();
+            myPeerId = roomCode;
+            
+            peer = new Peer(roomCode, {debug: 0});
+            
+            peer.on('open', id => {
+                console.log('✅ Serveur PeerJS connecté. ID:', id);
+                document.getElementById('room-code').innerText = myPeerId;
+                document.getElementById('code-display-2').innerText = myPeerId;
+                updateDynamicRules();
+            });
+
+            peer.on('connection', conn => {
+                console.log('🔗 Nouvelle connexion:', conn.peer);
+                
+                conn.on('open', () => {
+                    const pid = conn.peer;
+                    
+                    if(state.players[pid]) {
+                        console.warn('⚠️ Joueur déjà connecté:', pid);
+                        return;
+                    }
+
+                    state.players[pid] = {
+                        id: pid,
+                        conn: conn,
+                        name: '...',
+                        emoji: '👤',
+                        color: '#6366f1',
+                        lives: state.settings.lives,
+                        alive: true,
+                        ping: 0,
+                        isHost: false
+                    };
+
+                    conn.send({type: 'CONNECTED', id: pid, settings: state.settings});
+                    updateLobbyUI();
+                });
+
+                conn.on('data', data => handleMessage(conn.peer, data));
+                conn.on('close', () => handleDisconnect(conn.peer));
+                conn.on('error', err => console.error('❌ Erreur conn:', err));
+            });
+
+            peer.on('error', err => {
+                console.error('❌ Erreur peer:', err);
+                let errorMsg = 'Erreur de connexion';
+                if(err.type === 'unavailable-id') {
+                    errorMsg = 'Code salle déjà utilisé';
+                } else if(err.type === 'network') {
+                    errorMsg = 'Erreur réseau';
+                } else if(err.type === 'server-error') {
+                    errorMsg = 'Erreur serveur PeerJS';
+                } else if(err.type === 'socket-error') {
+                    errorMsg = 'Erreur de connexion au serveur';
+                }
+                alert(`❌ ${errorMsg}. Veuillez réessayer.`);
+            });
         }
 
         function initHostPickers() {
-            const emojiPicker = document.getElementById('host-emoji-picker');
-            const colorPicker = document.getElementById('host-color-picker');
+            const ePicker = document.getElementById('host-emoji-picker');
+            const cPicker = document.getElementById('host-color-picker');
 
-            AVAILABLE_EMOJIS.forEach((emoji, idx) => {
+            AVAILABLE_EMOJIS.slice(0, 20).forEach(e => {
                 const div = document.createElement('div');
-                div.className = 'picker-item' + (emoji === '👑' ? ' selected' : '');
-                div.textContent = emoji;
-                div.onclick = () => selectHostEmoji(emoji, div);
-                emojiPicker.appendChild(div);
+                div.className = 'picker-item';
+                if(e === hostPlayer.emoji) div.classList.add('selected');
+                div.innerText = e;
+                div.onclick = () => {
+                    ePicker.querySelectorAll('.picker-item').forEach(d => d.classList.remove('selected'));
+                    div.classList.add('selected');
+                    hostPlayer.emoji = e;
+                };
+                ePicker.appendChild(div);
             });
 
-            AVAILABLE_COLORS.forEach((color, idx) => {
+            AVAILABLE_COLORS.forEach(c => {
                 const div = document.createElement('div');
-                div.className = 'picker-item color-picker-item' + (color === '#6366f1' ? ' selected' : '');
-                div.style.backgroundColor = color;
-                div.onclick = () => selectHostColor(color, div);
-                colorPicker.appendChild(div);
+                div.className = 'picker-item color-picker-item';
+                div.style.backgroundColor = c;
+                if(c === hostPlayer.color) div.classList.add('selected');
+                div.onclick = () => {
+                    cPicker.querySelectorAll('.picker-item').forEach(d => d.classList.remove('selected'));
+                    div.classList.add('selected');
+                    hostPlayer.color = c;
+                };
+                cPicker.appendChild(div);
             });
         }
 
-        function selectHostEmoji(emoji, element) {
-            hostEmoji = emoji;
-            document.querySelectorAll('#host-emoji-picker .picker-item').forEach(el => el.classList.remove('selected'));
-            element.classList.add('selected');
-            gsap.from(element, {scale: 0.7, duration: 0.2, ease: 'back.out(2)'});
-        }
+        function toggleHostPlays() {
+            const enabled = document.getElementById('host-plays-check').checked;
+            hostPlayer.enabled = enabled;
+            document.getElementById('host-player-setup').style.display = enabled ? 'block' : 'none';
 
-        function selectHostColor(color, element) {
-            hostColor = color;
-            document.querySelectorAll('#host-color-picker .picker-item').forEach(el => el.classList.remove('selected'));
-            element.classList.add('selected');
-            gsap.from(element, {scale: 0.7, duration: 0.2, ease: 'back.out(2)'});
+            if(enabled) {
+                const name = document.getElementById('host-name').value || 'HÔTE';
+                state.players['HOST'] = {
+                    id: 'HOST',
+                    name: name,
+                    emoji: hostPlayer.emoji,
+                    color: hostPlayer.color,
+                    lives: state.settings.lives,
+                    alive: true,
+                    isHost: true,
+                    ping: 0
+                };
+            } else {
+                delete state.players['HOST'];
+            }
+
+            updateLobbyUI();
+            broadcastLobbyUpdate();
         }
 
         function selectMode(mode) {
-            settings.mode = mode;
-            document.querySelectorAll('.mode-option').forEach(el => el.classList.remove('selected'));
+            state.settings.mode = mode;
+            document.querySelectorAll('.mode-option').forEach(o => o.classList.remove('selected'));
             document.querySelector(`[data-mode="${mode}"]`).classList.add('selected');
             
-            switch(mode) {
-                case 'fast':
-                    document.getElementById('time-range').value = 10;
-                    updateSettings('startTime', 10);
-                    break;
-                case 'survival':
-                    document.getElementById('lives-range').value = 1;
-                    updateSettings('lives', 1);
-                    break;
-                case 'marathon':
-                    document.getElementById('lives-range').value = 99;
-                    updateSettings('lives', 99);
-                    break;
-                default:
-                    document.getElementById('time-range').value = 20;
-                    document.getElementById('lives-range').value = 2;
-                    updateSettings('startTime', 20);
-                    updateSettings('lives', 2);
+            if(mode === 'fast') {
+                state.settings.startTime = 10;
+                document.getElementById('time-range').value = 10;
+                document.getElementById('lbl-time').innerText = '10s';
             }
-            
-            gsap.from(`.mode-option[data-mode="${mode}"]`, {scale: 0.9, duration: 0.2, ease: 'back.out(2)'});
-        }
-
-        function startGame() {
-            settings.chatEnabled = document.getElementById('chat-enabled').checked;
-            settings.reactionsEnabled = document.getElementById('reactions-enabled').checked;
-            settings.soundsEnabled = document.getElementById('sounds-enabled').checked;
-
-            const hostPlays = document.getElementById('host-plays-check').checked;
-            if(hostPlays) {
-                const hostName = document.getElementById('host-name').value.trim() || 'HÔTE';
-                state.players['HOST'] = {
-                    id: 'HOST', 
-                    name: hostName, 
-                    emoji: hostEmoji,
-                    color: hostColor,
-                    lives: settings.lives, 
-                    alive: true, 
-                    conn: null, 
-                    ping: 0, 
-                    isHost: true
-                };
+            if(mode === 'survival') {
+                state.settings.lives = 1;
+                document.getElementById('lives-range').value = 1;
+                document.getElementById('lbl-lives').innerText = '1';
             }
 
-            const playerCount = Object.keys(state.players).length;
-            if(playerCount < 2) {
-                alert("Il faut au moins 2 joueurs pour commencer !");
-                return;
-            }
-
-            state.status = 'PLAYING';
-            state.queue = Object.keys(state.players);
-            state.usedWords.clear();
-            state.currentRound = 0;
-            
-            document.getElementById('start-btn').disabled = true;
-            document.getElementById('wait-screen').style.display = 'none';
-            document.getElementById('game-screen').style.display = 'flex';
-            document.getElementById('config-panel').style.opacity = '0.5';
-            document.getElementById('config-panel').style.pointerEvents = 'none';
-
-            gsap.from('#game-screen', {opacity: 0, scale: 0.95, duration: 0.8, ease: 'power3.out'});
-
-            if(hostPlays) {
-                document.getElementById('host-input-overlay').style.display = 'flex';
-                gsap.from('#host-input-overlay', {y: 50, opacity: 0, duration: 0.5, delay: 0.3});
-                
-                document.getElementById('host-word').addEventListener('keydown', e => {
-                    if(e.key === 'Enter') hostSubmit();
-                });
-            }
-
-            broadcast({type: 'GAME_START', players: cleanPlayerList()});
-            updateGameGrid();
-
-            startPingLoop();
-            
-            setTimeout(() => {
-                nextTurn();
-            }, 1000);
-        }
-
-        function nextTurn() {
-            if(checkWinCondition()) return;
-
-            let attempts = 0;
-            do {
-                state.turnIdx = (state.turnIdx + 1) % state.queue.length;
-                attempts++;
-                if(attempts > 100) {
-                    console.error('Boucle infinie détectée');
-                    return;
-                }
-            } while (!state.players[state.queue[state.turnIdx]].alive);
-
-            state.currentRound++;
-            const activeId = state.queue[state.turnIdx];
-            const activePlayer = state.players[activeId];
-            
-            state.syllable = generateSyllable();
-            state.maxTime = settings.startTime;
-            state.timeLeft = state.maxTime;
-
-            updateGameUI(activeId);
-
-            broadcast({
-                type: 'NEW_TURN', 
-                player: activeId, 
-                playerName: activePlayer.name,
-                syllable: state.syllable, 
-                maxTime: state.maxTime,
-                round: state.currentRound
-            });
-
-            broadcast({
-                type: 'PLAYERS_UPDATE',
-                players: cleanPlayerList()
-            });
-
-            if(timerInt) clearInterval(timerInt);
-            timerInt = setInterval(() => {
-                state.timeLeft -= 0.1;
-                updateTimerVisual();
-                
-                if(Math.round(state.timeLeft * 10) % 10 === 0) {
-                     broadcast({type: 'SYNC_TIME', time: state.timeLeft});
-                }
-
-                if(state.timeLeft <= 0) {
-                    clearInterval(timerInt);
-                    punishPlayer(activeId);
-                }
-            }, 100);
-        }
-
-        function processWord(pid, wordRaw) {
-            if(state.status !== 'PLAYING') return;
-            if(state.queue[state.turnIdx] !== pid) return;
-
-            const word = wordRaw.trim().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-            let error = null;
-
-            if(!word.includes(state.syllable)) {
-                error = `Syllabe "${state.syllable}" manquante !`;
-            } else if(state.usedWords.has(word)) {
-                error = "Déjà utilisé !";
-            } else if(DICTIONARY.size === 0) {
-                error = "Dictionnaire non chargé";
-            } else if(!DICTIONARY.has(word)) {
-                error = "Inconnu au bataillon";
-            }
-
-            if(error) {
-                sendTo(pid, {type: 'FEEDBACK', valid: false, msg: error});
-                gsap.to("#syllable-display", {x:10, yoyo:true, repeat:3, duration:0.05});
-            } else {
-                clearInterval(timerInt);
-                state.usedWords.add(word);
-                sendTo(pid, {type: 'FEEDBACK', valid: true});
-                
-                gsap.to("#syllable-display", {
-                    scale:1.3, 
-                    color: '#10b981',
-                    yoyo:true, 
-                    repeat:1, 
-                    duration:0.15,
-                    onComplete: () => {
-                        gsap.set("#syllable-display", {color: 'var(--text-main)'});
-                    }
-                });
-                
-                setTimeout(nextTurn, 800);
-            }
-        }
-
-        function punishPlayer(pid) {
-            const p = state.players[pid];
-            if(!p) return;
-
-            p.lives--;
-            broadcast({type: 'HIT', player: pid, lives: p.lives});
-            
-            const card = document.getElementById(`card-${pid}`);
-            if(card) {
-                gsap.to(card, {
-                    x: -5,
-                    yoyo: true,
-                    repeat: 5,
-                    duration: 0.08,
-                    ease: 'power1.inOut'
-                });
-            }
-            
-            if(p.lives <= 0) {
-                p.alive = false;
-                broadcast({type: 'ELIMINATED', player: pid});
-                
-                if(card) {
-                    gsap.to(card, {
-                        opacity: 0.4,
-                        filter: 'grayscale(1)',
-                        scale: 0.95,
-                        duration: 0.5
-                    });
-                }
-            }
-
-            updateGameGrid();
-            
-            if(!checkWinCondition()) {
-                setTimeout(nextTurn, 1500);
-            }
-        }
-
-        function checkWinCondition() {
-            const alive = Object.values(state.players).filter(p => p.alive);
-            
-            if(alive.length === 1) {
-                handleWin(alive[0].id);
-                return true;
-            } else if(alive.length === 0) {
-                handleWin(null);
-                return true;
-            }
-            return false;
-        }
-
-        function handleWin(winnerId) {
-            clearInterval(timerInt);
-            clearInterval(pingInt);
-            state.status = 'END';
-            
-            const wName = winnerId ? state.players[winnerId].name : "PERSONNE";
-            document.getElementById('syllable-display').innerText = "🏆";
-            document.getElementById('turn-indicator').innerText = "VICTOIRE DE " + wName.toUpperCase();
-            
-            gsap.from('#syllable-display', {
-                scale: 0,
-                rotation: 720,
-                duration: 1,
-                ease: 'back.out(1.7)'
-            });
-            
-            broadcast({type: 'GAME_OVER', winner: wName});
-        }
-
-        function generateSyllable() {
-            const syls = ["AR", "BO", "CH", "DI", "EN", "FR", "GR", "JU", "KI", "LI", "MA", "NO", "ON", "PA", "QU", "RE", "SI", "TI", "UR", "VI", "WA", "TER", "PRO", "CON", "AN", "BLE", "TION", "MENT"];
-            return syls[Math.floor(Math.random() * syls.length)];
-        }
-
-        function hostSubmit() {
-            const el = document.getElementById('host-word');
-            if(el.value.trim()) {
-                processWord('HOST', el.value);
-                el.value = '';
-            }
+            updateSettings();
+            updateDynamicRules();
         }
 
         function updateSettings(key, val) {
-            settings[key] = parseInt(val);
-            if(key === 'lives') {
-                document.getElementById('lbl-lives').innerText = val;
+            if(key) {
+                if(key === 'startTime' || key === 'lives') {
+                    state.settings[key] = parseInt(val);
+                } else if(key === 'uniqueWords' || key === 'showWords') {
+                    state.settings[key] = val;
+                } else {
+                    state.settings[key] = val;
+                }
+
+                if(key === 'lives') {
+                    document.getElementById('lbl-lives').innerText = val;
+                }
+                if(key === 'startTime') {
+                    document.getElementById('lbl-time').innerText = val + 's';
+                }
             }
-            if(key === 'startTime') {
-                document.getElementById('lbl-time').innerText = val + 's';
+
+            broadcast({type: 'SETTINGS_UPDATE', settings: state.settings});
+            updateDynamicRules();
+        }
+
+        function handleMessage(pid, data) {
+            if(data.type === 'JOIN') {
+                state.players[pid].name = data.name;
+                state.players[pid].emoji = data.emoji;
+                state.players[pid].color = data.color;
+                updateLobbyUI();
+                broadcastLobbyUpdate();
+            }
+
+            if(data.type === 'PONG') {
+                const rtt = Date.now() - data.ts;
+                state.players[pid].ping = rtt;
+                updatePingUI(pid);
+                // Renvoyer le ping au joueur
+                sendTo(pid, {type: 'PING_UPDATE', ping: rtt});
+            }
+
+            if(data.type === 'WORD') {
+                handleWord(pid, data.word);
+            }
+        }
+
+        function handleWord(pid, rawWord) {
+            if(!state.activePlayer || state.activePlayer !== pid) return;
+
+            const word = rawWord.trim().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+            
+            if(!word.includes(state.syllable)) {
+                sendTo(pid, {type: 'FEEDBACK', valid: false, msg: `Syllabe "${state.syllable}" manquante !`});
+                return;
+            }
+
+            if(state.settings.uniqueWords && state.usedWords.has(word)) {
+                sendTo(pid, {type: 'FEEDBACK', valid: false, msg: 'Mot déjà utilisé !'});
+                return;
+            }
+
+            if(!window.DICTIONARY_DATA.has(word)) {
+                sendTo(pid, {type: 'FEEDBACK', valid: false, msg: 'Mot inconnu !'});
+                return;
+            }
+
+            // Mot valide
+            clearInterval(timerInt);
+            state.usedWords.add(word);
+            wordsHistory.push({player: state.players[pid].name, word: word, color: state.players[pid].color});
+            updateWordsHistory();
+
+            sendTo(pid, {type: 'FEEDBACK', valid: true});
+
+            // Afficher le mot tombant
+            if(state.settings.showWords) {
+                showFallingWord(word, state.players[pid].name, state.players[pid].color);
+            }
+
+            setTimeout(() => nextTurn(), 1500);
+        }
+
+        function showFallingWord(word, playerName, color) {
+            const container = document.getElementById('falling-words-container');
+            const wordEl = document.createElement('div');
+            wordEl.style.cssText = `
+                position: absolute;
+                top: -100px;
+                left: ${Math.random() * 80 + 10}%;
+                transform: translateX(-50%);
+                pointer-events: none;
+                z-index: 1000;
+            `;
+            wordEl.innerHTML = `
+                <div style="text-align: center;">
+                    <div style="font-size: clamp(0.8rem, 2vw, 1rem); margin-bottom: 5px; color: ${color}; font-weight: 600;">${playerName}</div>
+                    <div style="
+                        width: clamp(60px, 15vw, 80px);
+                        height: clamp(60px, 15vw, 80px);
+                        background: ${color};
+                        border-radius: 12px;
+                        box-shadow: 0 0 20px ${color}80, 0 4px 12px rgba(0,0,0,0.4);
+                        border: 3px solid rgba(255,255,255,0.2);
+                        margin: 0 auto;
+                    "></div>
+                </div>
+            `;
+            container.appendChild(wordEl);
+
+            if(!powerSaveMode) {
+                gsap.to(wordEl, {
+                    top: '110%',
+                    rotation: 360,
+                    duration: 2.5,
+                    ease: 'power2.in',
+                    onComplete: () => wordEl.remove()
+                });
+                gsap.to(wordEl.querySelector('div > div:last-child'), {
+                    scale: 0.8,
+                    duration: 1.25,
+                    yoyo: true,
+                    repeat: 1,
+                    ease: 'power1.inOut'
+                });
+            } else {
+                setTimeout(() => wordEl.remove(), 2000);
+            }
+
+            // Broadcast aux joueurs
+            broadcast({
+                type: 'WORD_ANIMATION',
+                word: word,
+                playerName: playerName,
+                color: color
+            });
+        }
+
+        function updateWordsHistory() {
+            const historyEl = document.getElementById('history-list');
+            if(wordsHistory.length === 0) {
+                historyEl.innerHTML = '<span style="font-size: clamp(0.75rem, 2vw, 0.8rem); color: var(--text-muted);">Aucun mot joué</span>';
+                return;
+            }
+
+            historyEl.innerHTML = wordsHistory.slice(-20).reverse().map(h => 
+                `<span style="padding: 4px 10px; background: rgba(0,0,0,0.3); border-radius: 6px; font-size: clamp(0.75rem, 2vw, 0.85rem); border: 1px solid ${h.color};">
+                    <span style="color: ${h.color};">${h.player}:</span> ${h.word}
+                </span>`
+            ).join('');
+        }
+
+        function handleDisconnect(pid) {
+            console.log('👋 Déconnexion:', pid);
+            delete state.players[pid];
+            state.queue = state.queue.filter(p => p !== pid);
+            updateLobbyUI();
+            broadcastLobbyUpdate();
+        }
+
+        function kickPlayer(pid) {
+            if(!confirm(`Voulez-vous vraiment exclure ${state.players[pid].name} de la partie ?`)) {
+                return;
             }
             
-            if(state.status === 'LOBBY') {
-                broadcast({type: 'SETTINGS_UPDATE', settings});
+            console.log('⛔ Exclusion du joueur:', pid);
+            
+            // Envoyer un message au joueur pour le déconnecter
+            sendTo(pid, {type: 'KICKED', message: 'Vous avez été exclu de la partie par l\'hôte'});
+            
+            // Fermer la connexion
+            if(state.players[pid] && state.players[pid].conn) {
+                state.players[pid].conn.close();
             }
+            
+            // Supprimer le joueur de l'état
+            delete state.players[pid];
+            state.queue = state.queue.filter(p => p !== pid);
+            
+            updateLobbyUI();
+            broadcastLobbyUpdate();
         }
 
         function updateLobbyUI() {
@@ -684,20 +778,34 @@
                         ${p.emoji}
                     </div>
                     <div class="lobby-player-info">
-                        <div class="lobby-player-name">${p.name}</div>
+                        <div class="lobby-player-name" style="color: ${p.color};">${p.name}</div>
                         <div class="lobby-player-ping" id="ping-${p.id}" style="color: ${getPingColor(p.ping)}">
                             ${p.ping ? p.ping + 'ms' : '...'}
                         </div>
                     </div>
+                    <button onclick="kickPlayer('${p.id}')" style="background: var(--danger); color: white; border: none; padding: 5px 10px; border-radius: 6px; cursor: pointer; font-size: 0.75rem; font-weight: 600; flex-shrink: 0; min-height: 32px;" title="Exclure ce joueur">
+                        ❌
+                    </button>
                 `;
                 list.appendChild(div);
             });
             
-            if(allPlayers.length > 0) {
+            if(allPlayers.length > 0 || hostPlayer.enabled) {
                 const gridDiv = document.createElement('div');
                 gridDiv.className = 'grid-container';
                 gridDiv.style.maxHeight = 'none';
                 
+                if(hostPlayer.enabled) {
+                    const hostCard = document.createElement('div');
+                    hostCard.className = 'player-card';
+                    hostCard.innerHTML = `
+                        <div class="p-color-badge" style="background-color: ${hostPlayer.color};"></div>
+                        <div class="p-avatar">${hostPlayer.emoji}</div>
+                        <div class="p-name" style="color: ${hostPlayer.color};">${document.getElementById('host-name').value || 'HÔTE'} 👑</div>
+                    `;
+                    gridDiv.appendChild(hostCard);
+                }
+
                 allPlayers.forEach(p => {
                     const card = document.createElement('div');
                     card.className = 'player-card';
@@ -705,7 +813,7 @@
                     card.innerHTML = `
                         <div class="p-color-badge" style="background-color: ${p.color};"></div>
                         <div class="p-avatar">${p.emoji}</div>
-                        <div class="p-name">${p.name}</div>
+                        <div class="p-name" style="color: ${p.color};">${p.name}</div>
                         <div style="font-size: clamp(0.7rem, 1.8vw, 0.75rem); color: var(--text-muted); margin-top: 5px;">
                             ${p.ping ? p.ping + 'ms' : 'Connexion...'}
                         </div>
@@ -716,8 +824,10 @@
                 waitingDisplay.appendChild(gridDiv);
             }
             
-            document.getElementById('p-count').innerText = count;
-            document.getElementById('start-btn').disabled = count < 1;
+            document.getElementById('p-count').innerText = count + (hostPlayer.enabled ? 1 : 0);
+            // Minimum 2 joueurs (ou 1 joueur + hôte)
+            const totalPlayers = count + (hostPlayer.enabled ? 1 : 0);
+            document.getElementById('start-btn').disabled = totalPlayers < 2;
         }
 
         function broadcastLobbyUpdate() {
@@ -750,7 +860,7 @@
                     <div class="p-color-badge" style="background-color: ${p.color};"></div>
                     <div class="p-ping" style="color:${getPingColor(p.ping)}">${p.isHost ? '👑' : p.ping + 'ms'}</div>
                     <div class="p-avatar">${p.emoji}</div>
-                    <div class="p-name">${p.name}</div>
+                    <div class="p-name" style="color: ${p.color};">${p.name}</div>
                     <div class="p-lives">${p.lives > 0 ? "❤️".repeat(Math.min(p.lives, 5)) : "💀"}</div>
                 `;
                 grid.appendChild(div);
@@ -766,7 +876,9 @@
             const c = document.getElementById(`card-${activePid}`);
             if(c) {
                 c.classList.add('active');
-                gsap.from(c, {scale: 0.95, duration: 0.3, ease: 'back.out(2)'});
+                if(!powerSaveMode) {
+                    gsap.from(c, {scale: 0.95, duration: 0.3, ease: 'back.out(2)'});
+                }
             }
 
             if(activePid === 'HOST') {
@@ -818,10 +930,176 @@
             }, 2000);
         }
 
+        function startGame() {
+            // Désactiver le bouton et masquer la configuration
+            document.getElementById('start-btn').disabled = true;
+            document.getElementById('start-btn').innerText = 'PARTIE EN COURS...';
+            document.getElementById('config-panel').style.display = 'none';
+            document.getElementById('host-config').style.display = 'none';
+            
+            document.getElementById('waiting-view').style.display = 'none';
+            document.getElementById('game-view').style.display = 'block';
+
+            state.queue = Object.keys(state.players).filter(pid => state.players[pid].alive);
+            state.usedWords.clear();
+            wordsHistory = [];
+
+            broadcast({type: 'GAME_START'});
+            startPingLoop();
+            nextTurn();
+
+            if(!powerSaveMode) {
+                gsap.from('#game-view', {opacity: 0, scale: 0.95, duration: 0.6, ease: 'power3.out'});
+            }
+        }
+
+        function nextTurn() {
+            const aliveQueue = state.queue.filter(pid => state.players[pid] && state.players[pid].alive);
+            
+            if(aliveQueue.length === 0) {
+                endGame('Aucun survivant');
+                return;
+            }
+            
+            if(aliveQueue.length === 1) {
+                endGame(state.players[aliveQueue[0]].name);
+                return;
+            }
+
+            state.activePlayer = aliveQueue[0];
+            state.queue.push(state.queue.shift());
+            
+            state.syllable = generateSyllable();
+            state.maxTime = state.settings.startTime;
+            state.timeLeft = state.maxTime;
+
+            updateGameGrid();
+            updateGameUI(state.activePlayer);
+
+            broadcast({
+                type: 'NEW_TURN',
+                syllable: state.syllable,
+                activePlayer: state.activePlayer,
+                duration: state.maxTime,
+                players: cleanPlayerList()
+            });
+
+            if(state.activePlayer === 'HOST') {
+                document.getElementById('host-input-overlay').style.display = 'flex';
+                document.getElementById('host-word').value = '';
+            } else {
+                document.getElementById('host-input-overlay').style.display = 'none';
+            }
+
+            startTimer();
+        }
+
+        function generateSyllable() {
+            const difficulty = state.settings.syllableDifficulty;
+            const length = state.settings.syllableLength;
+
+            let syls = [];
+            
+            if(length === 'short') {
+                syls = ["AR", "BO", "CH", "LA", "MA", "PA", "RE", "SI", "ON", "EN"];
+            } else if(length === 'medium') {
+                syls = ["AR", "BO", "CH", "DI", "EN", "LA", "MA", "NO", "ON", "PA", "RE", "SI", "TI", "VI", "FR", "GR"];
+            } else {
+                syls = ["TER", "PRO", "CON", "AN", "BLE", "TION", "MENT", "EUR"];
+            }
+
+            if(difficulty === 'easy') {
+                syls = syls.slice(0, Math.ceil(syls.length / 2));
+            } else if(difficulty === 'hard') {
+                syls = [...syls, "QU", "PH", "TH", "GN"];
+            } else if(difficulty === 'expert') {
+                syls = ["QU", "PH", "TH", "GN", "SCH", "TION", "EUR", "MENT", "BLE"];
+            }
+
+            return syls[Math.floor(Math.random() * syls.length)];
+        }
+
+        function startTimer() {
+            clearInterval(timerInt);
+            const start = Date.now();
+            
+            timerInt = setInterval(() => {
+                const elapsed = (Date.now() - start) / 1000;
+                state.timeLeft = Math.max(0, state.maxTime - elapsed);
+                updateTimerVisual();
+
+                if(state.timeLeft <= 0) {
+                    clearInterval(timerInt);
+                    playerLoseLife(state.activePlayer);
+                }
+            }, 100);
+        }
+
+        function playerLoseLife(pid) {
+            const p = state.players[pid];
+            if(!p) return;
+
+            p.lives--;
+            
+            broadcast({type: 'HIT', player: pid, lives: p.lives});
+
+            if(p.lives <= 0) {
+                p.alive = false;
+                broadcast({type: 'ELIMINATED', player: pid});
+            }
+
+            updateGameGrid();
+            setTimeout(nextTurn, 2000);
+        }
+
+        function submitHostWord() {
+            const word = document.getElementById('host-word').value;
+            handleWord('HOST', word);
+        }
+
+        function endGame(winner) {
+            clearInterval(timerInt);
+            clearInterval(pingInt);
+
+            document.getElementById('game-view').style.display = 'none';
+            document.getElementById('gameover-view').style.display = 'block';
+            document.getElementById('winner-display').innerText = `🏆 ${winner}`;
+
+            // Statistiques de la partie
+            const stats = document.getElementById('game-stats');
+            stats.innerHTML = `
+                <div style="padding: 15px; background: rgba(0,0,0,0.2); border-radius: 8px;">
+                    <div style="font-size: 1.5rem; margin-bottom: 5px;">📝</div>
+                    <div style="font-size: 1.2rem; font-weight: 700;">${wordsHistory.length}</div>
+                    <div style="font-size: 0.75rem; color: var(--text-muted);">Mots joués</div>
+                </div>
+                <div style="padding: 15px; background: rgba(0,0,0,0.2); border-radius: 8px;">
+                    <div style="font-size: 1.5rem; margin-bottom: 5px;">👥</div>
+                    <div style="font-size: 1.2rem; font-weight: 700;">${Object.keys(state.players).length}</div>
+                    <div style="font-size: 0.75rem; color: var(--text-muted);">Joueurs</div>
+                </div>
+            `;
+
+            broadcast({type: 'GAME_OVER', winner: winner});
+
+            if(!powerSaveMode) {
+                gsap.from('#gameover-view', {opacity: 0, scale: 0.9, duration: 0.6, ease: 'back.out(1.5)'});
+            }
+        }
+
+        // Permettre à l'hôte de valider avec la touche Entrée
+        document.getElementById('host-word').addEventListener('keydown', (e) => {
+            if(e.key === 'Enter' && e.target.value.trim()) {
+                submitHostWord();
+            }
+        });
+
         initHostPickers();
 
-        gsap.from('.panel-side', {x: -50, opacity: 0, duration: 0.8, ease: 'power3.out', delay: 0.2});
-        gsap.from('.panel-main', {x: 50, opacity: 0, duration: 0.8, ease: 'power3.out', delay: 0.2});
+        if(!powerSaveMode) {
+            gsap.from('.panel-side', {x: -50, opacity: 0, duration: 0.8, ease: 'power3.out', delay: 0.2});
+            gsap.from('.panel-main', {x: 50, opacity: 0, duration: 0.8, ease: 'power3.out', delay: 0.2});
+        }
     </script>
 </body>
 </html>
