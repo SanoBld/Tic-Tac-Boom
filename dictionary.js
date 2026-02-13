@@ -36,4 +36,3 @@ async function loadFullDictionary() {
 }
 
 // Lancement automatique au chargement de la page
-loadFullDictionary();

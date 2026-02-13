@@ -1,193 +1,47 @@
-# 🎮 WORD BOMB 2.0 - VERSION OPTIMISÉE
+# 💣 Tic-Tac-Boom
 
-## ✨ CORRECTIONS ET OPTIMISATIONS APPORTÉES
+Bienvenue sur le dépôt de **Tic-Tac-Boom**, un jeu de rapidité et de vocabulaire en ligne. L'objectif est simple : une syllabe s'affiche, et vous devez trouver un mot qui la contient avant que la bombe n'explose.
 
-### 📱 INTERFACE UTILISATEUR OPTIMISÉE
+🔗 **Jouer en ligne :** [https://sanobld.github.io/Tic-Tac-Boom/](https://sanobld.github.io/Tic-Tac-Boom/)
 
-#### **Mobile & PC - Tous les écrans**
-✅ **Responsive design fluide** 
-- Utilisation de `clamp()` pour des tailles adaptatives automatiques
-- Breakpoints optimisés à 1024px, 768px et 480px
-- Grid adaptative avec `auto-fit` et `minmax`
+---
 
-✅ **Zones de toucher optimisées (Touch Targets)**
-- Minimum 48x48px pour tous les boutons et éléments interactifs
-- Espacement suffisant entre les éléments cliquables
-- Détection tactile spécifique pour appareils mobiles
+## 🎮 Les Modes de Jeu
 
-✅ **Typographie fluide**
-- Tailles de police adaptatives : `clamp(min, préféré, max)`
-- Lisibilité garantie sur tous les écrans
-- Line-height adapté pour confort de lecture
+Le jeu propose deux expériences distinctes pour s'adapter à toutes les situations :
 
-✅ **Espacements intelligents**
-- Padding et margin adaptatifs avec `clamp()`
-- Grille de joueurs qui s'adapte automatiquement
-- Pas de débordement ou chevauchement
+### 🕹️ Mode Solo
+- Défiez-vous dans une montée en difficulté progressive.
+- Gagnez des points en répondant vite.
+- Débloquez des succès et battez votre meilleur score (sauvegardé localement).
 
-### 🖥️ OPTIMISATIONS SPÉCIFIQUES PC
+### 🌐 Mode Multijoueur (P2P)
+- **Hôte** : Créez une salle et recevez un code unique.
+- **Joueur** : Rejoignez vos amis en entrant simplement le code.
+- **Technologie** : Utilise **PeerJS**, ce qui permet une connexion directe entre les joueurs pour une latence minimale.
 
-✅ **Dashboard hôte amélioré**
-- Grid de 320px + 1fr pour panneau latéral et principal
-- Panneau latéral scrollable sans débordement
-- Panneaux principaux avec overflow-y: auto
+---
 
-✅ **Grille de joueurs**
-- `repeat(auto-fit, minmax(130px, 150px))` pour adaptation automatique
-- Gap adaptatif selon taille d'écran
-- Max-height avec scroll si trop de joueurs
+## ✨ Fonctionnalités Avancées
 
-✅ **Input hôte repositionné**
-- Position fixed pour rester visible
-- Transform pour centrage parfait
-- Largeur max-width: 500px
-- Responsive sur mobile (flex-direction: column)
+### 📱 Progressive Web App (PWA)
+Le projet est configuré comme une PWA. Vous pouvez :
+- L'installer sur votre écran d'accueil (iOS, Android, Windows, macOS).
+- Y jouer même avec une connexion instable grâce au **Service Worker** qui met les fichiers en cache.
 
-### 📱 OPTIMISATIONS SPÉCIFIQUES MOBILE
+### 📚 Dictionnaire Intelligent
+- Utilise une base de données de mots français intégrée (`French.txt`).
+- Chargement asynchrone pour ne pas ralentir le démarrage du jeu.
+- Vérification instantanée via un objet `Set` en JavaScript pour des performances optimales.
 
-✅ **Layout mobile optimisé**
-- Dashboard passe en colonne unique < 1024px
-- Panneau latéral en bas, principal en haut
-- Hauteurs minimales adaptées
+### 🏅 Système de Succès
+- Intégration d'un système de badges pour récompenser la fidélité et la performance.
+---
 
-✅ **Composants tactiles**
-- Picker grids avec items minimum 48x48px
-- Boutons avec min-height pour doigts
-- Switches plus grands sur tactile
+## 🛠️ Stack Technique
 
-✅ **Interface joueur mobile**
-- Mobile-wrapper avec flex-direction: column
-- Overflow-y: auto sur zones scrollables
-- Stats bar et header flex-shrink: 0
-- Input area responsive
-
-✅ **Écran de lobby mobile**
-- Card avec display: flex et flex: 1
-- Liste joueurs scrollable
-- Infos joueur en ellipsis si trop long
-
-### 🎨 AMÉLIORATIONS VISUELLES
-
-✅ **Picker grids optimisés**
-- Grid auto-fit pour adaptation automatique
-- Gap adaptatif
-- Items avec aspect-ratio: 1
-
-✅ **Cartes joueurs**
-- Grid adaptatif : `repeat(auto-fit, minmax(110px-150px, 1fr))`
-- Padding et tailles de texte fluides
-- Badges de couleur proportionnels
-
-✅ **Inputs et boutons**
-- Min-height: 48px partout
-- Font-size adaptatif
-- Padding proportionnel
-
-### 🔧 CORRECTIONS TECHNIQUES
-
-✅ **Scrollbars personnalisées**
-- width: 8px pour discrétion
-- Style cohérent avec le thème
-- Hover effect
-
-✅ **Overflow gestion**
-- overflow-y: auto où nécessaire
-- max-height avec vh pour rester dans viewport
-- min-height: 0 sur flex items
-
-✅ **Media queries organisées**
-- @media (max-width: 1024px) - Tablet
-- @media (max-width: 768px) - Mobile
-- @media (max-width: 480px) - Petit mobile
-- @media (hover: none) - Tactile spécifique
-
-✅ **Flexbox et Grid**
-- flex-shrink: 0 sur éléments fixes
-- min-width: 0 pour ellipsis
-- gap au lieu de margin
-
-### 🎯 FICHIERS NON MODIFIÉS (comme demandé)
-
-✅ **dictionary.js** - Conservé à l'identique
-✅ **French.txt** - Conservé à l'identique
-
-## 📦 STRUCTURE DES FICHIERS
-
-```
-├── index.html          ← Optimisé responsive
-├── host.html           ← Optimisé responsive  
-├── player.html         ← Optimisé responsive
-├── style.css           ← Entièrement refait avec clamp()
-├── dictionary.js       ← Non modifié
-└── French.txt          ← Non modifié
-```
-
-## 🚀 CE QUI A ÉTÉ CORRIGÉ
-
-### Avant (Problèmes)
-❌ Tailles fixes en px partout
-❌ Dashboard qui déborde sur mobile
-❌ Textes trop petits ou trop grands
-❌ Zones de toucher < 44px
-❌ Overflow non géré
-❌ Grid qui casse sur mobile
-❌ Input hôte mal positionné
-
-### Après (Solutions)
-✅ Tailles fluides avec clamp()
-✅ Dashboard en colonne sur mobile
-✅ Textes adaptatifs sur tous écrans
-✅ Zones de toucher min 48x48px
-✅ Overflow-y: auto partout
-✅ Grid auto-fit responsive
-✅ Input hôte centré et responsive
-
-## 🎮 TESTS RECOMMANDÉS
-
-1. **Desktop (> 1024px)**
-   - Dashboard côte à côte
-   - Tous les textes lisibles
-   - Grilles bien espacées
-
-2. **Tablet (768px-1024px)**
-   - Dashboard en colonne
-   - Panneau latéral en bas
-   - Tout reste accessible
-
-3. **Mobile (< 768px)**
-   - Une colonne partout
-   - Boutons faciles à toucher
-   - Pas de scroll horizontal
-
-4. **Petit mobile (< 480px)**
-   - Textes encore lisibles
-   - Espaces optimisés
-   - Cartes adaptées
-
-## 💡 FONCTIONNALITÉS PRÉSERVÉES
-
-✅ Toute la logique de jeu intacte
-✅ PeerJS fonctionne comme avant
-✅ Animations GSAP conservées
-✅ Modes de jeu tous présents
-✅ Personnalisation emoji/couleur
-✅ Lobby avec tous les joueurs
-✅ Stats en temps réel
-✅ L'hôte peut jouer
-
-## 🎯 COMPATIBILITÉ
-
-✅ Chrome / Edge / Firefox
-✅ Safari (iOS et macOS)
-✅ Responsive 100%
-✅ Touch et souris
-✅ Portrait et paysage
-
-## ⚡ PERFORMANCE
-
-✅ CSS optimisé (< 20kb)
-✅ Pas de layouts imbriqués inutiles
-✅ Animations GPU-accelerated
-✅ Minimal reflows/repaints
-
-Tout est prêt et optimisé ! 🎉
+- **Interface** : HTML5 / CSS3 (Design moderne, Glassmorphism, Responsive).
+- **Animations** : [GSAP](https://greensock.com/gsap/) pour des transitions fluides et dynamiques.
+- **Réseau** : [PeerJS](https://peerjs.com/) pour la communication WebRTC en temps réel.
+- **Audio** : [Howler.js](https://howlerjs.com/) pour une gestion sonore immersive.
+- **Cache** : Service Worker (`sw.js`) pour le support hors-ligne.

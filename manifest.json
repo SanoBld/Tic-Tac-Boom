@@ -1,0 +1,42 @@
+{
+  "name": "Word Bomb 2.0",
+  "short_name": "Word Bomb",
+  "description": "Jeu de vocabulaire rapide et compétitif",
+  "start_url": "/index.html",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#6366f1",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["games", "education"],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Mode Solo",
+      "short_name": "Solo",
+      "description": "Jouer en mode solo",
+      "url": "/solo.html",
+      "icons": [{ "src": "icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Créer Partie",
+      "short_name": "Hôte",
+      "description": "Créer une partie multijoueur",
+      "url": "/host.html",
+      "icons": [{ "src": "icon-192.png", "sizes": "192x192" }]
+    }
+  ]
+}

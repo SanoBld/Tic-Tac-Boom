@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MES SUCCÈS - Word Bomb</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="achievements.js"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="card" style="max-width: 800px;">
+            <h1 style="margin-bottom: 0.5rem;">🏅 MES SUCCÈS</h1>
+            <p style="color: var(--text-muted); margin-bottom: 2rem;">
+                <span id="progress-text">0/0 débloqués</span>
+            </p>
+
+            <div id="achievements-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
+                <!-- Rempli par JS -->
+            </div>
+
+            <div style="background: rgba(99, 102, 241, 0.1); padding: 1.5rem; border-radius: 12px; margin-bottom: 1.5rem;">
+                <h3 style="margin-bottom: 1rem;">📊 STATISTIQUES</h3>
+                <div id="stats-display" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem;">
+                    <!-- Rempli par JS -->
+                </div>
+            </div>
+
+            <a href="index.html" style="text-decoration: none; width: 100%;">
+                <button class="btn secondary">
+                    <span>🏠</span> RETOUR
+                </button>
+            </a>
+        </div>
+    </div>
+
+    <script>
+        const achievements = getAllAchievements();
+        const stats = getStats();
+        const unlocked = achievements.filter(a => a.unlocked).length;
+
+        document.getElementById('progress-text').innerText = `${unlocked}/${achievements.length} débloqués`;
+
+        const grid = document.getElementById('achievements-grid');
+        achievements.forEach((ach, idx) => {
+            const div = document.createElement('div');
+            div.style.cssText = `
+                padding: 1.5rem;
+                background: ${ach.unlocked ? 'rgba(16, 185, 129, 0.1)' : 'rgba(0, 0, 0, 0.2)'};
+                border: 2px solid ${ach.unlocked ? 'var(--success)' : 'var(--glass-border)'};
+                border-radius: 12px;
+                text-align: center;
+                ${ach.unlocked ? '' : 'opacity: 0.5; filter: grayscale(1);'}
+            `;
+            div.innerHTML = `
+                <div style="font-size: 3rem; margin-bottom: 0.5rem;">${ach.icon}</div>
+                <div style="font-weight: 700; margin-bottom: 0.5rem; color: ${ach.unlocked ? 'var(--success)' : 'var(--text-main)'};">${ach.name}</div>
+                <div style="font-size: 0.85rem; color: var(--text-muted);">${ach.description}</div>
+            `;
+            grid.appendChild(div);
+            
+            if(ach.unlocked) {
+                gsap.from(div, {scale: 0.8, opacity: 0, duration: 0.5, delay: idx * 0.05, ease: 'back.out(1.7)'});
+            }
+        });
+
+        const statsDisplay = document.getElementById('stats-display');
+        const statsToShow = [
+            { label: 'Meilleur Score Solo', value: stats.solo_best, icon: '🏆' },
+            { label: 'Niveau Max', value: stats.max_level, icon: '⭐' },
+            { label: 'Meilleure Série', value: stats.best_streak, icon: '🔥' },
+            { label: 'Parties Jouées', value: stats.games_played, icon: '🎮' },
+            { label: 'Victoires', value: stats.wins, icon: '👑' },
+            { label: 'Mots Uniques', value: stats.unique_words, icon: '📚' }
+        ];
+
+        statsToShow.forEach(stat => {
+            const div = document.createElement('div');
+            div.style.cssText = `
+                padding: 1rem;
+                background: rgba(0, 0, 0, 0.2);
+                border-radius: 8px;
+                text-align: center;
+            `;
+            div.innerHTML = `
+                <div style="font-size: 1.5rem; margin-bottom: 0.5rem;">${stat.icon}</div>
+                <div style="font-size: 1.5rem; font-weight: 700; color: var(--accent);">${stat.value}</div>
+                <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem;">${stat.label}</div>
+            `;
+            statsDisplay.appendChild(div);
+        });
+
+        gsap.from('.card', {opacity: 0, y: 30, duration: 0.6, ease: 'power3.out'});
+    </script>
+</body>
+</html>

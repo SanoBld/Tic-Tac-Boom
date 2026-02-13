@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MODE SOLO - Word Bomb</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="dictionary.js"></script>
+    <script src="achievements.js"></script>
+</head>
+<body>
+    <div class="mobile-wrapper">
+        <!-- ÉCRAN DE DÉMARRAGE -->
+        <div id="menu-view" class="card" style="max-width: 100%; margin: auto;">
+            <h2>🏆 MODE SOLO</h2>
+            <p style="color: var(--text-muted); margin-bottom: 1.5rem;">Battez vos records personnels !</p>
+            
+            <div style="background: rgba(99, 102, 241, 0.1); padding: 1.5rem; border-radius: 12px; margin-bottom: 1.5rem;">
+                <div style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 0.5rem;">MEILLEUR SCORE</div>
+                <div id="best-score" style="font-size: 3rem; font-weight: 800; background: linear-gradient(to right, #f59e0b, #ef4444); -webkit-background-clip: text; background-clip: text; color: transparent;">0</div>
+            </div>
+
+            <button class="btn" onclick="startSolo()" style="margin-bottom: 1rem;">
+                <span>🎮</span> COMMENCER
+            </button>
+            
+            <a href="index.html" style="text-decoration: none; width: 100%;">
+                <button class="btn secondary">
+                    <span>🏠</span> RETOUR
+                </button>
+            </a>
+        </div>
+
+        <!-- ÉCRAN DE JEU -->
+        <div id="game-view" style="display:none; flex-direction:column; flex:1;">
+            <div class="mobile-header">
+                <div style="font-weight:bold; font-size: clamp(1rem, 3vw, 1.1rem);" id="lives-display">❤️❤️❤️</div>
+                <div style="font-weight:bold; font-size: clamp(1rem, 3vw, 1.1rem); color: var(--accent);" id="score-display">0</div>
+            </div>
+
+            <div class="stats-bar">
+                <div class="stat-item">
+                    <div class="stat-value" id="stat-level">1</div>
+                    <div class="stat-label">Niveau</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="stat-streak">0</div>
+                    <div class="stat-label">Série</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="stat-time">20</div>
+                    <div class="stat-label">Temps</div>
+                </div>
+            </div>
+
+            <div class="mobile-status" id="status-area" style="flex: 1;">
+                <div style="text-align:center; margin-bottom:15px;">
+                    <span style="color:var(--text-muted); font-size:clamp(0.75rem, 2vw, 0.8rem);">SYLLABE À TROUVER</span>
+                    <div id="syl-text" style="font-size:clamp(3rem, 10vw, 4rem); font-weight:800; color:var(--text-main); margin: 10px 0;">---</div>
+                </div>
+
+                <div style="width:100%; max-width: 400px; height:clamp(8px, 2vw, 10px); background:#333; border-radius:6px; overflow:hidden; margin-bottom:20px;">
+                    <div id="timer-bar" style="width:100%; height:100%; background:var(--primary); transition: width 0.1s linear;"></div>
+                </div>
+
+                <input type="text" id="word-input" placeholder="Tapez votre mot..." autocomplete="off" style="font-size:clamp(1.2rem, 3.5vw, 1.4rem); padding:clamp(16px, 3.5vw, 20px); max-width: 400px; width: 100%; margin-bottom: 10px;">
+                <div id="feedback-text" style="min-height:30px; color:var(--danger); text-align:center; font-weight:bold; font-size:clamp(0.9rem, 2.5vw, 1rem);"></div>
+            </div>
+        </div>
+
+        <!-- ÉCRAN GAME OVER -->
+        <div id="gameover-view" style="display:none; flex-direction:column; flex:1; justify-content:center; align-items:center; padding: 20px;">
+            <div class="card" style="text-align: center;">
+                <div style="font-size: clamp(4rem, 12vw, 6rem); margin-bottom: 20px;">💀</div>
+                <h2 style="margin-bottom: 1rem;">GAME OVER</h2>
+                
+                <div style="background: rgba(0,0,0,0.3); padding: 1.5rem; border-radius: 12px; margin-bottom: 1.5rem;">
+                    <div style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 0.5rem;">SCORE FINAL</div>
+                    <div id="final-score" style="font-size: 3rem; font-weight: 800; color: var(--accent);">0</div>
+                    
+                    <div id="new-record" style="display: none; margin-top: 1rem; padding: 10px; background: rgba(239, 68, 68, 0.2); border-radius: 8px; border: 2px solid var(--danger);">
+                        <span style="font-size: 1.5rem;">🏆</span>
+                        <div style="font-weight: 600; color: var(--danger);">NOUVEAU RECORD !</div>
+                    </div>
+                </div>
+
+                <div id="unlocked-achievements" style="margin-bottom: 1.5rem;"></div>
+
+                <button class="btn" onclick="startSolo()">
+                    <span>🔄</span> REJOUER
+                </button>
+                <button class="btn secondary" onclick="location.href='index.html'" style="margin-top: 10px;">
+                    <span>🏠</span> MENU PRINCIPAL
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let DICTIONARY = new Set();
+        let gameState = {
+            score: 0,
+            lives: 3,
+            level: 1,
+            streak: 0,
+            time: 20,
+            syllable: '',
+            usedWords: new Set(),
+            timerInterval: null,
+            difficulty: 1
+        };
+
+        window.addEventListener('dictionaryReady', () => {
+            DICTIONARY = window.DICTIONARY_DATA;
+            console.log('✅ Dictionnaire prêt:', DICTIONARY.size, 'mots');
+            loadBestScore();
+        });
+
+        loadFullDictionary();
+
+        function loadBestScore() {
+            const best = localStorage.getItem('solo_best_score') || 0;
+            document.getElementById('best-score').innerText = best;
+        }
+
+        function startSolo() {
+            document.getElementById('menu-view').style.display = 'none';
+            document.getElementById('gameover-view').style.display = 'none';
+            document.getElementById('game-view').style.display = 'flex';
+
+            gameState = {
+                score: 0,
+                lives: 3,
+                level: 1,
+                streak: 0,
+                time: 20,
+                syllable: '',
+                usedWords: new Set(),
+                timerInterval: null,
+                difficulty: 1
+            };
+
+            updateUI();
+            nextRound();
+
+            gsap.from('#game-view', {opacity: 0, scale: 0.95, duration: 0.5});
+        }
+
+        function nextRound() {
+            if(gameState.lives <= 0) {
+                gameOver();
+                return;
+            }
+
+            gameState.syllable = generateSyllable();
+            gameState.time = Math.max(5, 20 - gameState.level * 0.5);
+            
+            document.getElementById('syl-text').innerText = gameState.syllable;
+            document.getElementById('word-input').value = '';
+            document.getElementById('feedback-text').innerText = '';
+            document.getElementById('word-input').focus();
+
+            startTimer();
+            updateUI();
+
+            gsap.from('#syl-text', {scale: 0, rotation: 360, duration: 0.5, ease: 'back.out(2)'});
+        }
+
+        function generateSyllable() {
+            const syls = {
+                1: ["AR", "BO", "CH", "LA", "MA", "PA", "RE", "SI"],
+                2: ["AR", "BO", "CH", "DI", "EN", "LA", "MA", "NO", "ON", "PA", "RE", "SI", "TI", "VI"],
+                3: ["AR", "BO", "CH", "DI", "EN", "FR", "GR", "LA", "MA", "NO", "ON", "PA", "QU", "RE", "SI", "TI", "VI", "TER", "PRO"],
+                4: ["AR", "BO", "CH", "DI", "EN", "FR", "GR", "JU", "KI", "LI", "MA", "NO", "ON", "PA", "QU", "RE", "SI", "TI", "UR", "VI", "TER", "PRO", "CON", "AN", "BLE", "TION"]
+            };
+            
+            const level = Math.min(4, Math.ceil(gameState.level / 5));
+            const list = syls[level];
+            return list[Math.floor(Math.random() * list.length)];
+        }
+
+        function startTimer() {
+            if(gameState.timerInterval) clearInterval(gameState.timerInterval);
+            
+            const startTime = Date.now();
+            const duration = gameState.time * 1000;
+
+            gameState.timerInterval = setInterval(() => {
+                const elapsed = Date.now() - startTime;
+                const remaining = Math.max(0, duration - elapsed);
+                const pct = (remaining / duration) * 100;
+
+                document.getElementById('timer-bar').style.width = pct + '%';
+                document.getElementById('stat-time').innerText = Math.ceil(remaining / 1000);
+
+                if(remaining <= 0) {
+                    clearInterval(gameState.timerInterval);
+                    loseLife();
+                }
+            }, 100);
+        }
+
+        document.getElementById('word-input').addEventListener('keydown', (e) => {
+            if(e.key === 'Enter') {
+                submitWord();
+            }
+        });
+
+        function submitWord() {
+            const input = document.getElementById('word-input');
+            const word = input.value.trim().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+            
+            if(!word) return;
+
+            if(!word.includes(gameState.syllable)) {
+                showFeedback(`Syllabe "${gameState.syllable}" manquante !`, false);
+                return;
+            }
+
+            if(gameState.usedWords.has(word)) {
+                showFeedback("Déjà utilisé !", false);
+                return;
+            }
+
+            if(!DICTIONARY.has(word)) {
+                showFeedback("Mot inconnu !", false);
+                return;
+            }
+
+            // Valide !
+            clearInterval(gameState.timerInterval);
+            gameState.usedWords.add(word);
+            gameState.score += Math.floor(word.length * gameState.level * 10);
+            gameState.streak++;
+            gameState.level++;
+
+            showFeedback(`+${word.length * gameState.level * 10} points !`, true);
+            updateUI();
+
+            setTimeout(nextRound, 800);
+        }
+
+        function showFeedback(msg, success) {
+            const fb = document.getElementById('feedback-text');
+            fb.innerText = msg;
+            fb.style.color = success ? 'var(--success)' : 'var(--danger)';
+            
+            if(!success) {
+                const input = document.getElementById('word-input');
+                input.classList.add('shake');
+                setTimeout(() => input.classList.remove('shake'), 400);
+            }
+        }
+
+        function loseLife() {
+            gameState.lives--;
+            gameState.streak = 0;
+            
+            if(gameState.lives <= 0) {
+                gameOver();
+            } else {
+                showFeedback("💥 Temps écoulé ! -1 vie", false);
+                updateUI();
+                setTimeout(nextRound, 1500);
+            }
+        }
+
+        function updateUI() {
+            document.getElementById('lives-display').innerText = "❤️".repeat(Math.max(0, gameState.lives));
+            document.getElementById('score-display').innerText = gameState.score;
+            document.getElementById('stat-level').innerText = gameState.level;
+            document.getElementById('stat-streak').innerText = gameState.streak;
+        }
+
+        function gameOver() {
+            clearInterval(gameState.timerInterval);
+            
+            document.getElementById('game-view').style.display = 'none';
+            document.getElementById('gameover-view').style.display = 'flex';
+            document.getElementById('final-score').innerText = gameState.score;
+
+            const bestScore = parseInt(localStorage.getItem('solo_best_score') || 0);
+            if(gameState.score > bestScore) {
+                localStorage.setItem('solo_best_score', gameState.score);
+                document.getElementById('new-record').style.display = 'block';
+            } else {
+                document.getElementById('new-record').style.display = 'none';
+            }
+
+            // Vérifier les succès
+            if(typeof checkAchievements !== 'undefined') {
+                const unlocked = checkAchievements({
+                    score: gameState.score,
+                    level: gameState.level,
+                    streak: gameState.streak,
+                    mode: 'solo'
+                });
+
+                const container = document.getElementById('unlocked-achievements');
+                if(unlocked.length > 0) {
+                    container.innerHTML = '<div style="background: rgba(16, 185, 129, 0.2); padding: 12px; border-radius: 8px; margin-bottom: 10px; border: 2px solid var(--success);"><div style="font-weight: 600; margin-bottom: 8px;">🎉 SUCCÈS DÉBLOQUÉS !</div>' +
+                        unlocked.map(a => `<div style="font-size: 0.9rem;">🏅 ${a.name}</div>`).join('') +
+                        '</div>';
+                } else {
+                    container.innerHTML = '';
+                }
+            }
+
+            gsap.from('#gameover-view .card', {scale: 0.8, opacity: 0, duration: 0.5, ease: 'back.out(1.7)'});
+        }
+
+        gsap.from('.card', {opacity: 0, y: 30, duration: 0.6, ease: 'power3.out'});
+    </script>
+</body>
+</html>
