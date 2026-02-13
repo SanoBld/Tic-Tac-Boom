@@ -239,7 +239,6 @@
                 cPicker.appendChild(div);
             });
         }
-        
 
         function joinGame() {
             const code = document.getElementById('room-code').value.trim().toUpperCase();
@@ -287,18 +286,32 @@
                     location.reload();
                 });
                 conn.on('error', err => {
-                    console.error('❌ Erreur:', err);
-                    document.getElementById('conn-status').innerText = '❌ Erreur de connexion';
+                    console.error('❌ Erreur connexion:', err);
+                    let errorMsg = 'Erreur de connexion à l\'hôte';
+                    if(err.type === 'connection-closed') {
+                        errorMsg = 'La connexion a été fermée';
+                    }
+                    document.getElementById('conn-status').innerText = `❌ ${errorMsg}`;
                 });
             });
 
             peer.on('error', err => {
                 console.error('❌ Erreur peer:', err);
+                let errorMsg = 'Erreur de connexion';
                 if(err.type === 'peer-unavailable') {
-                    document.getElementById('conn-status').innerText = '❌ Code salle invalide';
-                } else {
-                    document.getElementById('conn-status').innerText = '❌ Erreur de connexion';
+                    errorMsg = 'Code salle invalide ou hôte déconnecté';
+                } else if(err.type === 'network') {
+                    errorMsg = 'Erreur réseau, vérifiez votre connexion';
+                } else if(err.type === 'server-error') {
+                    errorMsg = 'Erreur serveur PeerJS';
+                } else if(err.type === 'socket-error') {
+                    errorMsg = 'Impossible de se connecter au serveur';
+                } else if(err.type === 'disconnected') {
+                    errorMsg = 'Connexion au serveur perdue';
+                } else if(err.type === 'invalid-id') {
+                    errorMsg = 'Code de salle invalide';
                 }
+                document.getElementById('conn-status').innerText = `❌ ${errorMsg}`;
             });
         }
 
@@ -318,6 +331,10 @@
 
             if(data.type === 'PING') {
                 conn.send({type: 'PONG', ts: data.ts});
+            }
+
+            if(data.type === 'PING_UPDATE') {
+                updatePing(data.ping);
             }
 
             if(data.type === 'GAME_START') {
@@ -419,17 +436,21 @@
                 top: -100px;
                 left: ${Math.random() * 70 + 15}%;
                 transform: translateX(-50%);
-                font-size: clamp(1.2rem, 3.5vw, 1.8rem);
-                font-weight: 800;
-                color: ${color};
-                text-shadow: 0 0 10px ${color};
                 pointer-events: none;
                 z-index: 1001;
             `;
             wordEl.innerHTML = `
                 <div style="text-align: center;">
-                    <div style="font-size: clamp(0.8rem, 2vw, 1rem); margin-bottom: 3px; opacity: 0.8;">${playerName}</div>
-                    <div>${word}</div>
+                    <div style="font-size: clamp(0.7rem, 2vw, 0.9rem); margin-bottom: 3px; opacity: 0.9; color: ${color}; font-weight: 600;">${playerName}</div>
+                    <div style="
+                        width: clamp(50px, 12vw, 70px);
+                        height: clamp(50px, 12vw, 70px);
+                        background: ${color};
+                        border-radius: 10px;
+                        box-shadow: 0 0 20px ${color}80, 0 4px 12px rgba(0,0,0,0.4);
+                        border: 2px solid rgba(255,255,255,0.2);
+                        margin: 0 auto;
+                    "></div>
                 </div>
             `;
             container.appendChild(wordEl);
@@ -437,9 +458,17 @@
             if(!powerSaveMode) {
                 gsap.to(wordEl, {
                     top: '110%',
-                    duration: 3,
-                    ease: 'power1.in',
+                    rotation: 360,
+                    duration: 2.5,
+                    ease: 'power2.in',
                     onComplete: () => wordEl.remove()
+                });
+                gsap.to(wordEl.querySelector('div > div:last-child'), {
+                    scale: 0.8,
+                    duration: 1.25,
+                    yoyo: true,
+                    repeat: 1,
+                    ease: 'power1.inOut'
                 });
             } else {
                 setTimeout(() => wordEl.remove(), 2000);
