@@ -1,47 +1,47 @@
-# 💣 Tic-Tac-Boom
+# Tic-Tac-Boom
 
-Bienvenue sur le dépôt de **Tic-Tac-Boom**, un jeu de rapidité et de vocabulaire en ligne. L'objectif est simple : une syllabe s'affiche, et vous devez trouver un mot qui la contient avant que la bombe n'explose.
+A fast-paced vocabulary game built with web technologies. Find a word containing the given syllable before the bomb explodes.
 
-🔗 **Jouer en ligne :** [https://sanobld.github.io/Tic-Tac-Boom/](https://sanobld.github.io/Tic-Tac-Boom/)
-
----
-
-## 🎮 Les Modes de Jeu
-
-Le jeu propose deux expériences distinctes pour s'adapter à toutes les situations :
-
-### 🕹️ Mode Solo
-- Défiez-vous dans une montée en difficulté progressive.
-- Gagnez des points en répondant vite.
-- Débloquez des succès et battez votre meilleur score (sauvegardé localement).
-
-### 🌐 Mode Multijoueur (P2P)
-- **Hôte** : Créez une salle et recevez un code unique.
-- **Joueur** : Rejoignez vos amis en entrant simplement le code.
-- **Technologie** : Utilise **PeerJS**, ce qui permet une connexion directe entre les joueurs pour une latence minimale.
+**Play here:** [https://sanobld.github.io/Tic-Tac-Boom/](https://sanobld.github.io/Tic-Tac-Boom/)
 
 ---
 
-## ✨ Fonctionnalités Avancées
+## Game Modes
 
-### 📱 Progressive Web App (PWA)
-Le projet est configuré comme une PWA. Vous pouvez :
-- L'installer sur votre écran d'accueil (iOS, Android, Windows, macOS).
-- Y jouer même avec une connexion instable grâce au **Service Worker** qui met les fichiers en cache.
+### Solo Mode
+- Progressive difficulty scaling.
+- Local high-score tracking.
+- Achievement system.
 
-### 📚 Dictionnaire Intelligent
-- Utilise une base de données de mots français intégrée (`French.txt`).
-- Chargement asynchrone pour ne pas ralentir le démarrage du jeu.
-- Vérification instantanée via un objet `Set` en JavaScript pour des performances optimales.
+### Multiplayer (P2P)
+- **Host**: Create a room and share the unique access code.
+- **Player**: Join via room code.
+- **Tech**: Uses **PeerJS** for direct peer-to-peer connection and minimal latency.
 
-### 🏅 Système de Succès
-- Intégration d'un système de badges.
 ---
 
-## 🛠️ Stack Technique
+## Technical Features
 
-- **Interface** : HTML5 / CSS3 (Design moderne, Glassmorphism, Responsive).
-- **Animations** : [GSAP](https://greensock.com/gsap/) pour des transitions fluides et dynamiques.
-- **Réseau** : [PeerJS](https://peerjs.com/) pour la communication WebRTC en temps réel.
-- **Audio** : [Howler.js](https://howlerjs.com/) pour une gestion sonore immersive.
-- **Cache** : Service Worker (`sw.js`) pour le support hors-ligne.
+### PWA Support
+- Installable on iOS, Android, Windows, and macOS.
+- Offline capability via Service Worker caching.
+
+### Dictionary & Validation
+- Integrated French word database (`French.txt`).
+- Asynchronous loading to prevent UI blocking.
+- Instant validation using JavaScript `Set` for O(1) performance.
+
+### Visuals & Audio
+- UI built with Glassmorphism principles.
+- Animations powered by **GSAP**.
+- Audio managed via **Howler.js**.
+
+---
+
+## Tech Stack
+
+- **Frontend**: HTML5, CSS3, Vanilla JavaScript.
+- **Animations**: GSAP.
+- **Networking**: PeerJS (WebRTC).
+- **Audio**: Howler.js.
+- **Analytics**: Umami.
